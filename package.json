@@ -26,8 +26,11 @@
   },
   "homepage": "https://github.com/kksharma1618/lamda-restify#readme",
   "devDependencies": {
+    "@types/assert-plus": "^1.0.3",
     "@types/chai": "^3.5.2",
+    "@types/mime": "^1.3.1",
     "@types/mocha": "^2.2.41",
+    "@types/uuid": "^3.0.0",
     "chai": "^3.5.0",
     "chai-shallow-deep-equal": "^1.4.6",
     "mocha": "^3.3.0",
@@ -37,6 +40,9 @@
     "typescript": "^2.3.2"
   },
   "dependencies": {
-    "log": "^1.4.0"
+    "assert-plus": "^1.0.0",
+    "log": "^1.4.0",
+    "mime": "^1.3.6",
+    "uuid": "^3.1.0"
   }
 }
