@@ -1,0 +1,42 @@
+{
+  "name": "lamda-restify",
+  "version": "1.0.0",
+  "description": "A restify like interface for aws lamda with api gateway event",
+  "main": "build/index",
+  "types": "build/index",
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kksharma1618/lamda-restify.git"
+  },
+  "keywords": [
+    "aws",
+    "lamda",
+    "lamda",
+    "restify"
+  ],
+  "author": "Krishna Kant Sharma <kks@krishnakantsharma.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kksharma1618/lamda-restify/issues"
+  },
+  "homepage": "https://github.com/kksharma1618/lamda-restify#readme",
+  "devDependencies": {
+    "@types/chai": "^3.5.2",
+    "@types/mocha": "^2.2.41",
+    "chai": "^3.5.0",
+    "chai-shallow-deep-equal": "^1.4.6",
+    "mocha": "^3.3.0",
+    "nodemon": "^1.11.0",
+    "npm-run-series": "^1.0.0",
+    "ts-node": "^3.0.4",
+    "typescript": "^2.3.2"
+  },
+  "dependencies": {
+    "log": "^1.4.0"
+  }
+}
