@@ -31,7 +31,7 @@ export interface EventSource{
   },
   "queryStringParameters": {
     [key: string]: string
-  },
+  } | null,
   "headers": {
     [key: string]: string
   },

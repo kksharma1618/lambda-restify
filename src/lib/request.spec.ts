@@ -89,22 +89,75 @@ describe('Request', function() {
     })
     describe('getQuery', function() {
         it('should return empty object if no query string there', function() {
-            let model = createModel({
-                queryStringParameters: {}
-            })
+            let model = createModel()
+            model.url = '/path/to/resource'
             chai.expect(model.getQuery()).to.be.an('object')
             Object.keys(model.getQuery()).should.be.an('array').with.length(0)
         })
         it('should return query object', function() {
             chai.expect(model.getQuery()).to.be.an('object')
-            model.getQuery().should.have.property('foo', 'bar')
+            chai.expect(model.getQuery()).to.have.property('foo', 'bar')
         })
         it('should have alias named query', function() {
             model.should.have.property('query').which.is.an('function')
         })
     })
     describe('href', function() {
-        
+        it('should return full path', function() {
+            should.equal(model.href(), '/path/to/resource?foo=bar')
+        })
+    })
+    describe('id', function() {
+        it('should return an id if no arg is passed', function() {
+            chai.expect(model.id()).to.be.a('string').which.is.not.equal('')
+        })
+        it('should set id when arg is passed', function() {
+            model.id('someid')
+            should.equal(model.id(), 'someid')
+        })
+        it('should throw error if you set id when its already there', function() {
+            model.id("someid")
+            try {
+                model.id("otherid")
+                chai.assert(false, "should have thrown error")
+            }
+            catch(e) {
+            }
+        })
+    })
+    describe('getId', function() {
+        it('should return random id if nothing set', function() {
+            chai.expect(model.getId()).to.be.a('string').which.is.not.equal('')
+        })
+        it('should return id which was set using request.id function', function() {
+            model.id('someid')
+            should.equal(model.getId(), 'someid')
+        })
+    })
+    describe('getPath', function() {
+        it('should return path without query', function() {
+            should.equal(model.getPath(), '/path/to/resource')
+        })
+        it('should have an alias path', function() {
+            model.should.have.property('path').which.is.an('function')
+        })
+    })
+    describe('is', function() {
+        it('should return false without content type header', function() {
+            should.equal(model.is('html'), false)
+        })
+        it('should work with proper header', function() {
+            model.headers['content-type'] = 'text/html; charset=utf-8'
+            should.equal(model.is('html'), true)
+            should.equal(model.is('text/html'), true)
+            should.equal(model.is('json'), false)
+            should.equal(model.is('application/json'), false)
+        })
+    })
+    describe('userAgent', function() {
+        it('should work', function() {
+            should.equal(model.userAgent(), 'Custom User Agent String')
+        })
     })
 
 })
