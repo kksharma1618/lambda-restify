@@ -3,6 +3,8 @@ import Request from './request'
 import * as assert from 'assert-plus'
 import * as url from 'url'
 import { format as sprintf } from 'util'
+import * as mime from 'mime'
+import formatters from './formatters'
 
 function httpDate(now) {
     if (!now) {
@@ -10,6 +12,52 @@ function httpDate(now) {
     }
     return now.toUTCString()
 }
+
+function createFormattersAndAcceptables() {
+    var arr: any[] = [];
+    var obj = {};
+
+    function addFormatter(src, k) {
+        assert.func(src[k], 'formatter');
+
+        var q = 1.0; // RFC 2616 sec14 - The default value is q=1
+        var t = k;
+
+        if (k.indexOf(';') !== -1) {
+            var tmp = k.split(/\s*;\s*/);
+            t = tmp[0];
+
+            if (tmp[1].indexOf('q=') !== -1) {
+                q = parseFloat(tmp[1].split('=')[1]);
+            }
+        }
+
+        if (k.indexOf('/') === -1) {
+            k = mime.lookup(k);
+        }
+
+        obj[t] = src[k];
+        arr.push({
+            q: q,
+            t: t
+        });
+    }
+
+    Object.keys(formatters).forEach(addFormatter.bind(null, formatters))
+   
+    arr = arr.sort(function (a, b) {
+        return (b.q - a.q)
+    }).map(function (a) {
+        return (a.t)
+    })
+
+    return ({
+        formatters: obj,
+        acceptable: arr
+    })
+}
+const fmt = createFormattersAndAcceptables()
+
 /**
  * Headers that cannot be multi-values.
  * @see #779, don't use comma separated values for set-cookie
@@ -25,8 +73,10 @@ const HEADER_ARRAY_BLACKLIST = {
 export default class Response {
     private _headers: { [key: string]: string | string[] } = {}
     private lamdaCallbackCalled = false
-    private statusCode: string
-    private _body: string
+    private statusCode: number
+    private _body = ''
+    private _data: any
+    private _charSet: string
 
     constructor(private lamdaCallback: LamdaCallback, private req: Request) {
 
@@ -88,6 +138,9 @@ export default class Response {
         this._headers[name] = value
         return value
     }
+    public setHeader(name: string, value: any) {
+        return this.header(name, value)
+    }
     public getHeaders() {
         let headers = {}
         for (let name in this._headers) {
@@ -112,8 +165,43 @@ export default class Response {
         args.push(false) // Append format = false to __send invocation
         return this.__send.apply(this, args)
     }
-    private __send() {
+    public removeHeader(name) {
+        delete this._headers[name.toLowerCase()]
+    }
+    private writeHead(code?, message?, headers?) {
+        if(code) {
+            this.statusCode = code
+        }
+        if(typeof message === 'object') {
+            headers = message
+        }
+        if (this.statusCode === 204 || this.statusCode === 304) {
+            this.removeHeader('Content-Length');
+            this.removeHeader('Content-MD5');
+            this.removeHeader('Content-Type');
+            this.removeHeader('Content-Encoding');
+        }
+        if(typeof headers === 'object') {
+            Object.keys(headers).forEach(k => {
+                this.header(k, headers[k])
+            })
+        }
+    }
+    public write(chunk: string | Buffer, encoding?: string, callback?: any) {
+        this._body = this._body + chunk.toString()
+        if(typeof encoding === 'function') {
+            callback = encoding
+        }
+        if(typeof callback === 'function') {
+            process.nextTick(callback)
+        }
+        return true
+    }
+    public end() {
         this.callLamdaCallback()
+    }
+    private __send() {
+        
 
         let isHead = this.req.method === 'HEAD'
         let code, body, headers, format
@@ -157,40 +245,32 @@ export default class Response {
 
         // Populate our response object with the derived arguments
         this.statusCode = code
-        this._body = body
         Object.keys(headers).forEach(k => {
             this.header(k, headers[k])
         })
 
         
         // Flush takes our constructed response object and sends it to the client
-        let _flush = (formattedBody) => {
-            this._data = formattedBody;
+        let _flush = (formattedBody?) => {
+            this._data = formattedBody
 
             // Flush headers
-            this.writeHead(this.statusCode);
+            this.writeHead(this.statusCode)
 
             // Send body if it was provided
-            if (this._data) {
-                this.write(this._data);
+            if(this._data) {
+                this.write(this._data)
             }
-
-            // Finish request
-            this.end();
-
-            // If log level is set to trace, log the entire response object
-            if (log.trace()) {
-                log.trace({ res: this }, 'response sent');
-            }
+            this.end()
 
             // Return the response object back out to the caller of __send
-            return this;
+            return this
         }
 
         // 204 = No Content and 304 = Not Modified, we don't want to send the
         // body in these cases. HEAD never provides a body.
         if (isHead || code === 204 || code === 304) {
-            return _flush();
+            return _flush()
         }
 
         // if no formatting, assert that the value to be written is a string
@@ -198,12 +278,12 @@ export default class Response {
         if (format === false) {
             assert.ok(typeof body === 'string' || Buffer.isBuffer(body),
                 'res.sendRaw() accepts only strings or buffers');
-            return _flush(body);
+            return _flush(body)
         }
 
         // if no body, then no need to format. if this was an error caught by a
         // domain, don't send the domain error either.
-        if (body === undefined || (body instanceof Error && body.domain)) {
+        if (body === undefined || (body instanceof Error && (body as any).domain)) {
             return _flush();
         }
 
@@ -212,57 +292,55 @@ export default class Response {
 
         // _formatterError is used to handle any case where we were unable to
         // properly format the provided body
-        function _formatterError(err) {
+        let _formatterError = (err) => {
             // If the user provided a non-success error code, we don't want to mess
             // with it since their error is probably more important than our
             // inability to format their message.
             if (this.statusCode >= 200 && this.statusCode < 300) {
-                this.statusCode = err.statusCode;
+                this.statusCode = err.statusCode
             }
-
-            log.warn({
+            console.log({
                 req: this.req,
                 err: err
-            }, 'error retrieving formatter');
-
-            return _flush();
+            }, 'error retrieving formatter')
+            return _flush()
         }
 
-        var formatter;
-        var type = this.contentType || this.getHeader('Content-Type');
+        let formatter
+        let type = this.header('Content-Type')
 
-        // Check to see if we can find a valid formatter
-        if (!type && !this.req.accepts(this.acceptable)) {
-            return _formatterError(new errors.NotAcceptableError({
-                message: 'could not find suitable formatter'
-            }));
+         // Check to see if we can find a valid formatter
+        if (!type && !this.req.accepts(fmt.acceptable)) {
+            let e = new Error('could not find suitable formatter');
+            (e as any).statusCode = 406
+            return _formatterError(e)
         }
 
         // Derive type if not provided by the user
         if (!type) {
-            type = this.req.accepts(this.acceptable);
+            type = this.req.accepts(fmt.acceptable);
         }
 
         type = type.split(';')[0];
 
-        if (!this.formatters[type] && type.indexOf('/') === -1) {
+        if (!fmt.formatters[type] && type.indexOf('/') === -1) {
             type = mime.lookup(type);
         }
 
         // If we were unable to derive a valid type, default to treating it as
         // arbitrary binary data per RFC 2046 Section 4.5.1
-        if (!this.formatters[type] && this.acceptable.indexOf(type) === -1) {
+        if (!fmt.formatters[type] && fmt.acceptable.indexOf(type) === -1) {
             type = 'application/octet-stream';
         }
 
-        formatter = this.formatters[type] || this.formatters['*/*'];
+        formatter = fmt.formatters[type] || fmt.formatters['*/*'];
 
         // If after the above attempts we were still unable to derive a formatter,
         // provide a meaningful error message
         if (!formatter) {
-            return _formatterError(new errors.InternalServerError({
-                message: 'could not find formatter for application/octet-stream'
-            }));
+            let e = new Error('could not find formatter for application/octet-stream');
+            (e as any).statusCode = 500
+            return _formatterError(e)
         }
 
         if (this._charSet) {
@@ -280,8 +358,8 @@ export default class Response {
             this.lamdaCallbackCalled = true
 
             this.lamdaCallback(null, {
-                statusCode: '200',
-                body: '',
+                statusCode: this.statusCode + '',
+                body: this._body,
                 headers: this.getHeaders()
             })
         }
