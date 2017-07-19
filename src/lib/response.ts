@@ -4,72 +4,11 @@ import * as assert from 'assert-plus'
 import * as url from 'url'
 import { format as sprintf } from 'util'
 import * as mime from 'mime'
-import formatters from './formatters'
 
-function httpDate(now) {
-    if (!now) {
-        now = new Date()
-    }
-    return now.toUTCString()
-}
+import { createHttpError, createFormattersAndAcceptables, httpDate, shallowCopy, mergeQs, HEADER_ARRAY_BLACKLIST } from './restify_utils'
 
-function createFormattersAndAcceptables() {
-    var arr: any[] = [];
-    var obj = {};
-
-    function addFormatter(src, k) {
-        assert.func(src[k], 'formatter');
-
-        var q = 1.0; // RFC 2616 sec14 - The default value is q=1
-        var t = k;
-
-        if (k.indexOf(';') !== -1) {
-            var tmp = k.split(/\s*;\s*/);
-            t = tmp[0];
-
-            if (tmp[1].indexOf('q=') !== -1) {
-                q = parseFloat(tmp[1].split('=')[1]);
-            }
-        }
-
-        if (k.indexOf('/') === -1) {
-            k = mime.lookup(k);
-        }
-
-        obj[t] = src[k];
-        arr.push({
-            q: q,
-            t: t
-        });
-    }
-
-    Object.keys(formatters).forEach(addFormatter.bind(null, formatters))
-   
-    arr = arr.sort(function (a, b) {
-        return (b.q - a.q)
-    }).map(function (a) {
-        return (a.t)
-    })
-
-    return ({
-        formatters: obj,
-        acceptable: arr
-    })
-}
 const fmt = createFormattersAndAcceptables()
 
-/**
- * Headers that cannot be multi-values.
- * @see #779, don't use comma separated values for set-cookie
- * @see #986, don't use comma separated values for content-type
- * @see http://tools.ietf.org/html/rfc6265#section-3
- */
-const HEADER_ARRAY_BLACKLIST = {
-    'set-cookie': true,
-    'content-type': true
-}
-
-//TODO: charSet, 
 export default class Response {
     private _headers: { [key: string]: string | string[] } = {}
     private lamdaCallbackCalled = false
@@ -169,10 +108,10 @@ export default class Response {
         delete this._headers[name.toLowerCase()]
     }
     private writeHead(code?, message?, headers?) {
-        if(code) {
+        if (code) {
             this.statusCode = code
         }
-        if(typeof message === 'object') {
+        if (typeof message === 'object') {
             headers = message
         }
         if (this.statusCode === 204 || this.statusCode === 304) {
@@ -181,7 +120,7 @@ export default class Response {
             this.removeHeader('Content-Type');
             this.removeHeader('Content-Encoding');
         }
-        if(typeof headers === 'object') {
+        if (typeof headers === 'object') {
             Object.keys(headers).forEach(k => {
                 this.header(k, headers[k])
             })
@@ -189,10 +128,10 @@ export default class Response {
     }
     public write(chunk: string | Buffer, encoding?: string, callback?: any) {
         this._body = this._body + chunk.toString()
-        if(typeof encoding === 'function') {
+        if (typeof encoding === 'function') {
             callback = encoding
         }
-        if(typeof callback === 'function') {
+        if (typeof callback === 'function') {
             process.nextTick(callback)
         }
         return true
@@ -201,7 +140,7 @@ export default class Response {
         this.callLamdaCallback()
     }
     private __send() {
-        
+
 
         let isHead = this.req.method === 'HEAD'
         let code, body, headers, format
@@ -249,7 +188,7 @@ export default class Response {
             this.header(k, headers[k])
         })
 
-        
+
         // Flush takes our constructed response object and sends it to the client
         let _flush = (formattedBody?) => {
             this._data = formattedBody
@@ -258,7 +197,7 @@ export default class Response {
             this.writeHead(this.statusCode)
 
             // Send body if it was provided
-            if(this._data) {
+            if (this._data) {
                 this.write(this._data)
             }
             this.end()
@@ -309,22 +248,20 @@ export default class Response {
         let formatter
         let type = this.header('Content-Type')
 
-         // Check to see if we can find a valid formatter
+        // Check to see if we can find a valid formatter
         if (!type && !this.req.accepts(fmt.acceptable)) {
-            let e = new Error('could not find suitable formatter');
-            (e as any).statusCode = 406
-            return _formatterError(e)
+            return _formatterError(createHttpError('could not find suitable formatter', 406))
         }
 
         // Derive type if not provided by the user
         if (!type) {
-            type = this.req.accepts(fmt.acceptable);
+            type = this.req.accepts(fmt.acceptable)
         }
 
-        type = type.split(';')[0];
+        type = type.split(';')[0]
 
         if (!fmt.formatters[type] && type.indexOf('/') === -1) {
-            type = mime.lookup(type);
+            type = mime.lookup(type)
         }
 
         // If we were unable to derive a valid type, default to treating it as
@@ -338,20 +275,18 @@ export default class Response {
         // If after the above attempts we were still unable to derive a formatter,
         // provide a meaningful error message
         if (!formatter) {
-            let e = new Error('could not find formatter for application/octet-stream');
-            (e as any).statusCode = 500
-            return _formatterError(e)
+            return _formatterError(createHttpError('could not find formatter for application/octet-stream', 500))
         }
 
         if (this._charSet) {
-            type = type + '; charset=' + this._charSet;
+            type = type + '; charset=' + this._charSet
         }
 
         // Update header to the derived content type for our formatter
-        this.setHeader('Content-Type', type);
+        this.setHeader('Content-Type', type)
 
         // Finally, invoke the formatter and flush the request with it's results
-        return _flush(formatter(this.req, this, body));
+        return _flush(formatter(this.req, this, body))
     }
     private callLamdaCallback() {
         if (!this.lamdaCallbackCalled) {
@@ -379,5 +314,134 @@ export default class Response {
 
         let _link = sprintf('<%s>; rel="%s"', l, rel)
         return this.header('Link', _link)
+    }
+    public charSet(type: string) {
+        assert.string(type, 'charset')
+        this._charSet = type
+        return this
+    }
+    public redirect(arg1, arg2, arg3) {
+
+        let self = this
+        let statusCode = 302
+        let finalUri
+        let redirectLocation
+        let next
+        // next is not mendatary in lamda restify version
+
+        // 1) this is signature 1, where an explicit status code is passed in.
+        //    MUST guard against null here, passing null is likely indicative
+        //    of an attempt to call res.redirect(null, next);
+        //    as a way to do a reload of the current page.
+        if (arg1 && !isNaN(arg1)) {
+            statusCode = arg1
+            finalUri = arg2
+            next = arg3
+        }
+
+        // 2) this is signaure number 2
+        else if (typeof (arg1) === 'string') {
+            // otherwise, it's a string, and use it directly
+            finalUri = arg1
+            next = arg2
+        }
+
+        // 3) signature number 3, using an options object.
+        else if (typeof (arg1) === 'object') {
+
+            // set next, then go to work.
+            next = arg2;
+
+            let req = self.req;
+            let opt = arg1 || {};
+            let currentFullPath = req.href()
+            let secure = (opt.hasOwnProperty('secure')) ?
+                opt.secure :
+                req.isSecure()
+
+            // if hostname is passed in, use that as the base,
+            // otherwise fall back on current url.
+            let parsedUri = url.parse(opt.hostname || currentFullPath, true)
+
+            // create the object we'll use to format for the final uri.
+            // this object will eventually get passed to url.format().
+            // can't use parsedUri to seed it, as it confuses the url module
+            // with some existing parsed state. instead, we'll pick the things
+            // we want and use that as a starting point.
+            finalUri = {
+                port: parsedUri.port,
+                hostname: parsedUri.hostname,
+                query: parsedUri.query,
+                pathname: parsedUri.pathname
+            }
+
+            // start building url based on options.
+            // first, set protocol.
+            finalUri.protocol = (secure === true) ? 'https' : 'http'
+
+            // then set host
+            if (opt.hostname) {
+                finalUri.hostname = opt.hostname
+            }
+
+            // then set current path after the host
+            if (opt.pathname) {
+                finalUri.pathname = opt.pathname
+            }
+
+            // then set port
+            if (opt.port) {
+                finalUri.port = opt.port
+            }
+
+            // then add query params
+            if (opt.query) {
+                if (opt.overrideQuery === true) {
+                    finalUri.query = opt.query
+                } else {
+                    finalUri.query = mergeQs(opt.query, finalUri.query)
+                }
+            }
+
+            // change status code to 301 permanent if specified
+            if (opt.permanent) {
+                statusCode = 301
+            }
+        }
+
+
+        // if we are missing a finalized uri
+        // by this point, pass an error to next.
+        if (!finalUri) {
+            return next(createHttpError('could not construct url', 500))
+        }
+
+        redirectLocation = url.format(finalUri);
+
+        self.send(statusCode, null, {
+            Location: redirectLocation
+        })
+
+        if (typeof next === 'function') {
+            next(false)
+        }
+    }
+    public status(code) {
+        assert.number(code, 'code')
+        this.statusCode = code
+        return code
+    }
+    public set(name, val) {
+        if (arguments.length === 2) {
+            assert.string(name, 'res.set(name, val) requires name to be a string')
+            this.header(name, val)
+        } else {
+            assert.object(name,
+                'res.set(headers) requires headers to be an object')
+            Object.keys(name).forEach((k) => {
+                this.set(k, name[k])
+            })
+        }
+        return this
     }
 }
