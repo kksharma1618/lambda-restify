@@ -6,10 +6,10 @@ import * as restifyErrors from 'restify-errors'
 import Response from './response'
 import Request from './request'
 import { LamdaCallback } from './lamda_callback'
-import {EventSource, PartialEventSource} from './event_source'
+import { EventSource, PartialEventSource } from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
 
-function createRequestModel(customEventSource?: PartialEventSource) : Request {
+function createRequestModel(customEventSource?: PartialEventSource): Request {
     const eventSource = Object.assign({}, sampleEventSource, customEventSource || {})
     return new Request(eventSource)
 }
@@ -43,21 +43,27 @@ describe('Response', function () {
         expect(modelResponse).to.be.an('object').with.property('result')
         expect(modelResponse.result).to.be.an('object')
     }
-    function testHeaderInModelResponse(name: string, value: any) {
+    function testHeaderInModelResponse(name: string, value?: any) {
         testSuccessModelResponse()
-        expect(modelResponse.result.headers).to.be.an('object').with.property(name, value)
+        let t = expect(modelResponse.result.headers).to.be.an('object')
+        if(value) {
+            t.with.property(name, value)
+        }
+        else {
+            t.with.property(name)
+        }
     }
     function testStatusCodeInModelResponse(code: number) {
         testSuccessModelResponse()
-        modelResponse.result.should.have.property('statusCode', code+'')
+        modelResponse.result.should.have.property('statusCode', code + '')
     }
     function testBodyInModelResponse(body: string, contentType?: string, contentLength?: number) {
         testSuccessModelResponse()
         modelResponse.result.should.have.property('body', body)
-        if(contentType !== undefined) {
+        if (contentType !== undefined) {
             expect(modelResponse.result.headers).to.be.an('object').with.property('content-type', contentType)
         }
-        if(contentLength !== undefined) {
+        if (contentLength !== undefined) {
             expect(modelResponse.result.headers).to.be.an('object').with.property('content-length', contentLength)
         }
     }
@@ -123,8 +129,8 @@ describe('Response', function () {
             testHeaderInModelResponse('expires', '0')
         })
     })
-    describe('getHeaders', function() {
-        it('should return all headers', function() {
+    describe('getHeaders', function () {
+        it('should return all headers', function () {
             model.header('a', 'av')
             model.header('b', 'b1')
             model.header('b', 'b2')
@@ -133,20 +139,20 @@ describe('Response', function () {
             headers.should.have.property('b', 'b1,b2')
         })
     })
-    describe('removeHeader', function() {
-        it('should remove header', function() {
+    describe('removeHeader', function () {
+        it('should remove header', function () {
             model.header('a', 'av')
             model.removeHeader('a')
             expect(model.header('a')).to.be.undefined
         })
     })
-    describe('writeHead', function() {
-        it('should set status code', function() {
+    describe('writeHead', function () {
+        it('should set status code', function () {
             model.writeHead(404)
             model.send()
             testStatusCodeInModelResponse(404)
         })
-        it('should set additional headers if passed', function() {
+        it('should set additional headers if passed', function () {
             model.header('a', 'a1')
             model.header('b', 'b1')
             model.writeHead(201, {
@@ -160,44 +166,44 @@ describe('Response', function () {
             testHeaderInModelResponse('c', 'c1')
         })
     })
-    describe('write', function() {
-        it('should write to body', function() {
+    describe('write', function () {
+        it('should write to body', function () {
             model.write('b')
-            model.write('a')  
+            model.write('a')
             model.send()
             testBodyInModelResponse('ba')
         })
     })
-    describe('link', function() {
-        it('should set link header', function() {
+    describe('link', function () {
+        it('should set link header', function () {
             model.link('/p/1', 'first')
             model.link('/p/10', 'last')
             model.send()
             testHeaderInModelResponse('link', '</p/1>; rel="first",</p/10>; rel="last"')
         })
     })
-    describe('charSet', function() {
-        it('should charset of content-type header', function() {
+    describe('charSet', function () {
+        it('should charset of content-type header', function () {
             model.charSet('utf-8')
             model.header('content-type', 'text/html')
             model.send('some')
             testHeaderInModelResponse('content-type', 'text/html; charset=utf-8')
         })
     })
-    describe('status', function() {
-        it('should set status code', function() {
+    describe('status', function () {
+        it('should set status code', function () {
             model.status(404)
             model.send()
             testStatusCodeInModelResponse(404)
         })
     })
-    describe('set', function() {
-        it('should set header - name,value', function() {
+    describe('set', function () {
+        it('should set header - name,value', function () {
             model.set('a', 'a1')
             model.send()
             testHeaderInModelResponse('a', 'a1')
         })
-        it('should set header - object', function() {
+        it('should set header - object', function () {
             model.set({
                 a: 'a1',
                 b: 'b1'
@@ -207,8 +213,8 @@ describe('Response', function () {
             testHeaderInModelResponse('b', 'b1')
         })
     })
-    describe('getHeaderNames', function() {
-        it('should return array of all header names lower cased', function() {
+    describe('getHeaderNames', function () {
+        it('should return array of all header names lower cased', function () {
             model.set({
                 a: 'a1',
                 B: 'b1'
@@ -217,44 +223,44 @@ describe('Response', function () {
             expect(names).to.have.same.members(['a', 'b'])
         })
     })
-    describe('hasHeader', function() {
-        it('should check if header exists', function() {
+    describe('hasHeader', function () {
+        it('should check if header exists', function () {
             model.header('a', 'a1')
             should.equal(model.hasHeader('a'), true)
             should.equal(model.hasHeader('b'), false)
         })
     })
-    describe('send', function() {
-        it('should auto format body based on content-type', function() {
+    describe('send', function () {
+        it('should auto format body based on content-type', function () {
             model.header('content-type', 'json')
-            model.send({a: 23})
+            model.send({ a: 23 })
             testBodyInModelResponse('{"a":23}', 'application/json', Buffer.byteLength('{"a":23}'))
         })
-        it('should fallback on request accepts header if we dont set content type', function() {
-            model.send({a: 23})
+        it('should fallback on request accepts header if we dont set content type', function () {
+            model.send({ a: 23 })
             testBodyInModelResponse('[object Object]', 'text/html', Buffer.byteLength('[object Object]'))
 
             setupNewModel({
-                headers: Object.assign({}, sampleEventSource.headers, 
-                {
-                    Accept: 'application/json'
-                })
+                headers: Object.assign({}, sampleEventSource.headers,
+                    {
+                        Accept: 'application/json'
+                    })
             })
-            
-            model.send({a: 24})
+
+            model.send({ a: 24 })
             testBodyInModelResponse('{"a":24}', 'application/json', Buffer.byteLength('{"a":24}'))
         })
-        it('should respect previous write', function() {
+        it('should respect previous write', function () {
             model.write('a')
             model.send('b')
             testBodyInModelResponse('ab')
         })
-        it('should accept code as first arg', function() {
+        it('should accept code as first arg', function () {
             model.send(201, 'some')
             testStatusCodeInModelResponse(201)
             testBodyInModelResponse('some')
         })
-        it('should handle error as body', function() {
+        it('should handle error as body', function () {
             model.header('content-type', 'json')
             model.send(new restifyErrors.InvalidArgumentError('id'))
             testBodyInModelResponse('{"code":"InvalidArgument","message":"id"}')
@@ -266,4 +272,75 @@ describe('Response', function () {
             testStatusCodeInModelResponse(409)
         })
     })
+    describe('json', function () {
+        it('should handle json response', function () {
+            model.json({ a: 23 })
+            testBodyInModelResponse('{"a":23}', 'application/json', Buffer.byteLength('{"a":23}'))
+        })
+    })
+    describe('redirect', function () {
+        it('should handle url redirect', function () {
+            model.redirect('/some/url')
+            testStatusCodeInModelResponse(302)
+            testBodyInModelResponse('', undefined, 0)
+            testHeaderInModelResponse('location', '/some/url')
+        })
+        it('should handle url options object', function () {
+            model.redirect({
+                hostname: 'www.foo.com',
+                pathname: '/bar',
+                secure: true,             // sets https
+                permanent: true,
+                query: {
+                    a: 1
+                }
+            })
+            testStatusCodeInModelResponse(301) // permanent
+            testBodyInModelResponse('', undefined, 0)
+            testHeaderInModelResponse('location', 'https://www.foo.com/bar?a=1')
+        })
+    })
+    describe('end', function() {
+        it('should send all the data pushed using writeHead, write and headers', function() {
+            model.header('a', 'a1')
+            model.writeHead(201, {
+                b: 'b1'
+            })
+            model.write('1')
+            model.write('2')
+            model.end()
+            testStatusCodeInModelResponse(201)
+            testBodyInModelResponse('12')
+            testHeaderInModelResponse('a', 'a1')
+            testHeaderInModelResponse('b', 'b1')
+        })
+    })
+    describe('finished', function() {
+        it('should be set to false before and true after end is called', function() {
+            should.equal(model.finished, false)
+            model.send()
+            should.equal(model.finished, true)
+        })
+    })
+    describe('headersSent', function() {
+        it('should be set to false before and true after end is called', function() {
+            should.equal(model.headersSent, false)
+            model.send()
+            should.equal(model.headersSent, true)
+        })
+    })
+    describe('sendDate', function() {
+        it('should send date header if true', function() {
+            // default is true
+            model.send()
+            testHeaderInModelResponse('date')
+            
+            setupNewModel()
+            model.sendDate = false
+            model.send()
+            testSuccessModelResponse()
+            modelResponse.result.headers.should.not.have.property('date')
+        })
+    })
+
 })

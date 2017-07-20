@@ -11,8 +11,14 @@ const fmt = createFormattersAndAcceptables()
 
 export default class Response {
 
-    public finished = false
-    public headersSent = false
+    private _finished = false
+    public get finished() {
+        return this._finished
+    }
+    private _headersSent = false
+    public get headersSent() {
+        return this._headersSent
+    }
     public sendDate = true
     public statusCode: number
     public statusMessage: string
@@ -149,8 +155,8 @@ export default class Response {
     }
     public end() {
         this.callLamdaCallback()
-        this.finished = true
-        this.headersSent = true
+        this._finished = true
+        this._headersSent = true
     }
     private __send() {
 
@@ -332,7 +338,7 @@ export default class Response {
         this._charSet = type
         return this
     }
-    public redirect(arg1, arg2, arg3) {
+    public redirect(arg1, arg2?, arg3?) {
 
         let self = this
         let statusCode = 302
