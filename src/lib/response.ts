@@ -212,7 +212,6 @@ export default class Response {
 
             // Flush headers
             this.writeHead(this.statusCode)
-
             // Send body if it was provided
             if (this._data) {
                 this.write(this._data)
@@ -268,12 +267,10 @@ export default class Response {
         if (!type && !this.req.accepts(fmt.acceptable)) {
             return _formatterError(createHttpError('could not find suitable formatter', 406))
         }
-
         // Derive type if not provided by the user
         if (!type) {
             type = this.req.accepts(fmt.acceptable)
         }
-
         type = type.split(';')[0]
 
         if (!fmt.formatters[type] && type.indexOf('/') === -1) {
@@ -285,7 +282,7 @@ export default class Response {
         if (!fmt.formatters[type] && fmt.acceptable.indexOf(type) === -1) {
             type = 'application/octet-stream';
         }
-
+        
         formatter = fmt.formatters[type] || fmt.formatters['*/*'];
 
         // If after the above attempts we were still unable to derive a formatter,
@@ -300,14 +297,13 @@ export default class Response {
 
         // Update header to the derived content type for our formatter
         this.setHeader('Content-Type', type)
-
+        
         // Finally, invoke the formatter and flush the request with it's results
         return _flush(formatter(this.req, this, body))
     }
     private callLamdaCallback() {
         if (!this.lamdaCallbackCalled) {
             this.lamdaCallbackCalled = true
-
             this.lamdaCallback(null, {
                 statusCode: this.statusCode + '',
                 body: this._body || this.statusMessage || '',

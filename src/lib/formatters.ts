@@ -38,7 +38,7 @@ export default {
         res.setHeader('Content-Length', Buffer.byteLength(data))
         return data
     },
-    'text/html; q=0.4': function (req: Request, res: Response, body: any) {
+    'text/html; q=0.31': function (req: Request, res: Response, body: any) {
         let data = body ? body.toString() : ''
         res.setHeader('Content-Length', Buffer.byteLength(data))
         return data

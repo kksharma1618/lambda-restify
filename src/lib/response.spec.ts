@@ -2,6 +2,7 @@ import * as chai from "chai";
 const should = chai.should()
 const expect = chai.expect
 
+import * as restifyErrors from 'restify-errors'
 import Response from './response'
 import Request from './request'
 import { LamdaCallback } from './lamda_callback'
@@ -26,10 +27,15 @@ describe('Response', function () {
 
     let model: Response
     let modelResponse: any
-    beforeEach(() => {
+
+    function setupNewModel(customEventSource?: PartialEventSource) {
         model = createModel(function (error, result) {
             modelResponse = { error, result }
-        } as LamdaCallback)
+        } as LamdaCallback, customEventSource)
+    }
+
+    beforeEach(() => {
+        setupNewModel()
     })
 
     function testSuccessModelResponse() {
@@ -37,7 +43,7 @@ describe('Response', function () {
         expect(modelResponse).to.be.an('object').with.property('result')
         expect(modelResponse.result).to.be.an('object')
     }
-    function testHeaderInModelResponse(name: string, value: string) {
+    function testHeaderInModelResponse(name: string, value: any) {
         testSuccessModelResponse()
         expect(modelResponse.result.headers).to.be.an('object').with.property(name, value)
     }
@@ -45,9 +51,15 @@ describe('Response', function () {
         testSuccessModelResponse()
         modelResponse.result.should.have.property('statusCode', code+'')
     }
-    function testBodyInModelResponse(body: string) {
+    function testBodyInModelResponse(body: string, contentType?: string, contentLength?: number) {
         testSuccessModelResponse()
         modelResponse.result.should.have.property('body', body)
+        if(contentType !== undefined) {
+            expect(modelResponse.result.headers).to.be.an('object').with.property('content-type', contentType)
+        }
+        if(contentLength !== undefined) {
+            expect(modelResponse.result.headers).to.be.an('object').with.property('content-length', contentLength)
+        }
     }
 
     describe('header', function () {
@@ -213,6 +225,45 @@ describe('Response', function () {
         })
     })
     describe('send', function() {
-        
+        it('should auto format body based on content-type', function() {
+            model.header('content-type', 'json')
+            model.send({a: 23})
+            testBodyInModelResponse('{"a":23}', 'application/json', Buffer.byteLength('{"a":23}'))
+        })
+        it('should fallback on request accepts header if we dont set content type', function() {
+            model.send({a: 23})
+            testBodyInModelResponse('[object Object]', 'text/html', Buffer.byteLength('[object Object]'))
+
+            setupNewModel({
+                headers: Object.assign({}, sampleEventSource.headers, 
+                {
+                    Accept: 'application/json'
+                })
+            })
+            
+            model.send({a: 24})
+            testBodyInModelResponse('{"a":24}', 'application/json', Buffer.byteLength('{"a":24}'))
+        })
+        it('should respect previous write', function() {
+            model.write('a')
+            model.send('b')
+            testBodyInModelResponse('ab')
+        })
+        it('should accept code as first arg', function() {
+            model.send(201, 'some')
+            testStatusCodeInModelResponse(201)
+            testBodyInModelResponse('some')
+        })
+        it('should handle error as body', function() {
+            model.header('content-type', 'json')
+            model.send(new restifyErrors.InvalidArgumentError('id'))
+            testBodyInModelResponse('{"code":"InvalidArgument","message":"id"}')
+            testStatusCodeInModelResponse(409)
+
+            setupNewModel()
+            model.send(new restifyErrors.InvalidArgumentError('id'))
+            testBodyInModelResponse('InvalidArgumentError: id')
+            testStatusCodeInModelResponse(409)
+        })
     })
 })
