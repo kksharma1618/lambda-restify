@@ -7,7 +7,7 @@ export function createHttpError(msg: string, code: number) {
     (e as any).statusCode = code
     return e
 }
-export function httpDate(now) {
+export function httpDate(now?) {
     if (!now) {
         now = new Date()
     }

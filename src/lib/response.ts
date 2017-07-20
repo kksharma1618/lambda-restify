@@ -10,9 +10,15 @@ import { createHttpError, createFormattersAndAcceptables, httpDate, shallowCopy,
 const fmt = createFormattersAndAcceptables()
 
 export default class Response {
+
+    public finished = false
+    public headersSent = false
+    public sendDate = true
+    public statusCode: number
+    public statusMessage: string
+    
     private _headers: { [key: string]: string | string[] } = {}
     private lamdaCallbackCalled = false
-    private statusCode: number
     private _body = ''
     private _data: any
     private _charSet: string
@@ -107,9 +113,12 @@ export default class Response {
     public removeHeader(name) {
         delete this._headers[name.toLowerCase()]
     }
-    private writeHead(code?, message?, headers?) {
+    public writeHead(code?, message?, headers?) {
         if (code) {
             this.statusCode = code
+        }
+        if (typeof message === 'string') {
+            this.statusMessage = message
         }
         if (typeof message === 'object') {
             headers = message
@@ -122,12 +131,14 @@ export default class Response {
         }
         if (typeof headers === 'object') {
             Object.keys(headers).forEach(k => {
+                // complete override, no multiple headers this way
+                this.removeHeader(k)
                 this.header(k, headers[k])
             })
         }
     }
     public write(chunk: string | Buffer, encoding?: string, callback?: any) {
-        this._body = this._body + chunk.toString()
+        this._body = this._body + (typeof chunk === 'string' ? chunk.toString() : chunk.toString(encoding || 'base64'))
         if (typeof encoding === 'function') {
             callback = encoding
         }
@@ -138,6 +149,8 @@ export default class Response {
     }
     public end() {
         this.callLamdaCallback()
+        this.finished = true
+        this.headersSent = true
     }
     private __send() {
 
@@ -179,7 +192,7 @@ export default class Response {
 
         // Set sane defaults for optional arguments if they were not provided and
         // we failed to derive their values
-        code = code || 200
+        code = code || this.statusCode || 200
         headers = headers || {}
 
         // Populate our response object with the derived arguments
@@ -187,6 +200,10 @@ export default class Response {
         Object.keys(headers).forEach(k => {
             this.header(k, headers[k])
         })
+
+        if(this.sendDate && !this.hasHeader('date')) {
+            this.header('date', httpDate())
+        }
 
 
         // Flush takes our constructed response object and sends it to the client
@@ -247,7 +264,6 @@ export default class Response {
 
         let formatter
         let type = this.header('Content-Type')
-
         // Check to see if we can find a valid formatter
         if (!type && !this.req.accepts(fmt.acceptable)) {
             return _formatterError(createHttpError('could not find suitable formatter', 406))
@@ -263,7 +279,7 @@ export default class Response {
         if (!fmt.formatters[type] && type.indexOf('/') === -1) {
             type = mime.lookup(type)
         }
-
+        
         // If we were unable to derive a valid type, default to treating it as
         // arbitrary binary data per RFC 2046 Section 4.5.1
         if (!fmt.formatters[type] && fmt.acceptable.indexOf(type) === -1) {
@@ -294,7 +310,7 @@ export default class Response {
 
             this.lamdaCallback(null, {
                 statusCode: this.statusCode + '',
-                body: this._body,
+                body: this._body || this.statusMessage || '',
                 headers: this.getHeaders()
             })
         }
@@ -302,7 +318,7 @@ export default class Response {
     public get(name: string) {
         return this.header(name)
     }
-    public json(code, object, headers) {
+    public json(code?, object?, headers?) {
         if (!/application\/json/.test(this.header('content-type'))) {
             this.header('Content-Type', 'application/json');
         }
@@ -431,7 +447,7 @@ export default class Response {
         this.statusCode = code
         return code
     }
-    public set(name, val) {
+    public set(name, val?) {
         if (arguments.length === 2) {
             assert.string(name, 'res.set(name, val) requires name to be a string')
             this.header(name, val)
@@ -443,5 +459,14 @@ export default class Response {
             })
         }
         return this
+    }
+    public getHeaderNames() {
+        return Object.keys(this._headers)
+    }
+    public hasHeader(name: string) {
+        return this._headers.hasOwnProperty(name)
+    }
+    public writeContinue() {
+        // noop
     }
 }

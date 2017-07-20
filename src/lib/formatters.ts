@@ -38,6 +38,11 @@ export default {
         res.setHeader('Content-Length', Buffer.byteLength(data))
         return data
     },
+    'text/html; q=0.4': function (req: Request, res: Response, body: any) {
+        let data = body ? body.toString() : ''
+        res.setHeader('Content-Length', Buffer.byteLength(data))
+        return data
+    },
     'application/octet-stream; q=0.2': function (req: Request, res: Response, body: any) {
         if (!Buffer.isBuffer(body)) {
             body = new Buffer(body.toString())
