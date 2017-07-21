@@ -1,11 +1,13 @@
 import { EventEmitter } from 'events'
 import { ServerOptions } from './server_options'
-import {shallowCopy} from './restify_utils'
+import { shallowCopy } from './restify_utils'
 import * as assert from 'assert-plus'
 import * as uuid from 'uuid'
 import Request from './request'
 import Response from './response'
 import Router from './router'
+import * as Logger from 'log'
+import * as semver from 'semver'
 
 export type HandlerFunction = (req: Request, res: Response, next: (err?: Error | null | false) => any) => any
 
@@ -15,17 +17,23 @@ export default class Server extends EventEmitter {
     private versions: string[]
     private router: Router
     private routes: any = {}
+    private log: Logger
 
     constructor(private options: ServerOptions = {}) {
         super()
-        this.versions = options.versions ? (Array.isArray(options.versions) ? options.versions : [options.versions] ) : []
-        this.router = new Router()
+        this.versions = options.versions ? (Array.isArray(options.versions) ? options.versions : [options.versions]) : []
+        if (!options.log) {
+            options.log = new Logger("info")
+        }
+        options.log.warn = options.log.warn || options.log.warning
+        this.log = options.log
+        this.router = new Router(options)
     }
-    public pre() {
+    public pre(...args: any[]) {
         argumentsToChain(arguments).forEach(h => this.before.push(h))
         return this
     }
-    public use() {
+    public use(...args: any[]) {
         argumentsToChain(arguments).forEach(h => this.chain.push(h))
         return this
     }
@@ -65,7 +73,7 @@ export default class Server extends EventEmitter {
             throw new TypeError('path (string) required')
         }
 
-        
+
 
         let chain: HandlerFunction[] = []
         let route
@@ -107,6 +115,42 @@ export default class Server extends EventEmitter {
         this.routes[route] = chain
 
         return route
+    }
+    public param(name, fn) {
+        this.use((req, res, next) => {
+            if (req.params && req.params[name]) {
+                fn.call(this, req, res, next, req.params[name], name)
+            } else {
+                next()
+            }
+        })
+        return this
+    }
+    public versionedUse(versions: string | string[], fn) {
+        if (!Array.isArray(versions)) {
+            versions = [versions]
+        }
+        assert.arrayOfString(versions, 'versions');
+
+        versions.forEach(function (v) {
+            if (!semver.valid(v)) {
+                throw new TypeError(v+' is not a valid semver')
+            }
+        })
+
+        this.use((req, res, next) => {
+            let ver
+
+            if (req.version() === '*' ||
+                (ver = semver.maxSatisfying(versions as string[],
+                    req.version()) || false)) {
+                fn.call(this, req, res, next, ver)
+            } else {
+                next()
+            }
+        });
+
+        return this
     }
 }
 

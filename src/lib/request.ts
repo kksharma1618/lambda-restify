@@ -3,7 +3,7 @@ import * as assert from 'assert-plus'
 import * as mime from "mime"
 import * as uuid from 'uuid'
 import * as url from 'url'
-import {format} from 'util'
+import { format } from 'util'
 const Negotiator = require('negotiator')
 
 export default class Request {
@@ -13,6 +13,7 @@ export default class Request {
     public httpVersion: string
     public method: string
     public params: { [key: string]: string }
+    public _meta: any = {}
 
     private negotiator
     private contentLengthCached: number | boolean
@@ -22,7 +23,7 @@ export default class Request {
     private cachedUrlObject: url.Url
     private cachedUrl: string
 
-    
+
 
     constructor(private source: EventSource) {
         this.headers = {}
@@ -37,17 +38,17 @@ export default class Request {
             }
         })
         this.url = this.source.path
-        
-        if(this.source.queryStringParameters) {
+
+        if (this.source.queryStringParameters) {
             let urlObject = url.parse(this.url)
             urlObject.query = Object.assign({}, this.source.queryStringParameters)
             this.url = url.format(urlObject)
         }
-        
+
         this.startingTime = Date.now()
 
         this.httpVersion = '2.0'
-        if(this.headers.via) {
+        if (this.headers.via) {
             this.httpVersion = this.headers.via.split(' ')[0]
         }
         this.method = this.source.httpMethod
@@ -178,7 +179,7 @@ export default class Request {
         return this._id
     }
     public getPath() {
-        return this.getUrl().pathname
+        return this.getUrl().pathname || ""
     }
     public path() {
         return this.getPath()
@@ -240,7 +241,11 @@ export default class Request {
         return this.getVersion()
     }
     public matchedVersion() {
-        return this.getVersion()
+        if (this._meta.matchedVersion !== undefined) {
+            return (this._meta.matchedVersion);
+        } else {
+            return this.getVersion()
+        }
     }
     public trailer(name: string, value?: string) {
         return value

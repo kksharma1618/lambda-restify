@@ -22,6 +22,7 @@ export default class Response {
     public sendDate = true
     public statusCode: number
     public statusMessage: string
+    public _meta: any = {}
     
     private _headers: { [key: string]: string | string[] } = {}
     private lamdaCallbackCalled = false
