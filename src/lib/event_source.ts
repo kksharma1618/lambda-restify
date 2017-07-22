@@ -1,6 +1,6 @@
 export type httpMethod = "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT"
 
-type Partial<T> = {
+export type Partial<T> = {
     [P in keyof T]?: T[P];
 }
 
