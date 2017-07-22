@@ -9,5 +9,6 @@ export interface ServerOptions {
     log?: Logger,
     name?: string,
     versions?: string | string[],
-    strictRouting?: boolean
+    strictRouting?: boolean,
+    handleUncaughtExceptions?: boolean
 }

@@ -8,10 +8,12 @@ import Request from './request'
 import { LamdaCallback } from './lamda_callback'
 import { EventSource, PartialEventSource } from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
+import * as Logger from 'log'
+const log = new Logger()
 
 function createRequestModel(customEventSource?: PartialEventSource): Request {
     const eventSource = Object.assign({}, sampleEventSource, customEventSource || {})
-    return new Request(eventSource)
+    return new Request(eventSource, log)
 }
 
 function createModel(lamdaCallback?: LamdaCallback, customEventSource?: PartialEventSource): Response {
@@ -20,7 +22,7 @@ function createModel(lamdaCallback?: LamdaCallback, customEventSource?: PartialE
 
         } as LamdaCallback
     }
-    return new Response(lamdaCallback, createRequestModel(customEventSource))
+    return new Response(lamdaCallback, createRequestModel(customEventSource), log)
 }
 
 describe('Response', function () {
@@ -271,6 +273,13 @@ describe('Response', function () {
             testBodyInModelResponse('InvalidArgumentError: id')
             testStatusCodeInModelResponse(409)
         })
+        // it('should handle error as body - error specifies body', function () {
+        //     let e = new restifyErrors.InvalidArgumentError('id')
+        //     e.body = 'some'
+        //     model.send(e)
+        //     testBodyInModelResponse('{"code":"InvalidArgument","message":"id"}')
+        //     testStatusCodeInModelResponse(409)
+        // })
     })
     describe('json', function () {
         it('should handle json response', function () {

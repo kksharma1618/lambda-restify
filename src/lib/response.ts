@@ -4,6 +4,7 @@ import * as assert from 'assert-plus'
 import * as url from 'url'
 import { format as sprintf } from 'util'
 import * as mime from 'mime'
+import * as Logger from 'log'
 
 import { createHttpError, createFormattersAndAcceptables, httpDate, shallowCopy, mergeQs, HEADER_ARRAY_BLACKLIST } from './restify_utils'
 
@@ -23,6 +24,8 @@ export default class Response {
     public statusCode: number
     public statusMessage: string
     public _meta: any = {}
+    public serverName: string
+    public version: string
     
     private _headers: { [key: string]: string | string[] } = {}
     private lamdaCallbackCalled = false
@@ -30,7 +33,7 @@ export default class Response {
     private _data: any
     private _charSet: string
 
-    constructor(private lamdaCallback: LamdaCallback, private req: Request) {
+    constructor(private lamdaCallback: LamdaCallback, private req: Request, public log: Logger) {
 
     }
     public cache(type?: any, options?: any) {
@@ -154,10 +157,24 @@ export default class Response {
         }
         return true
     }
-    public end() {
+    public end(data?: string | Buffer, encoding?: string, callback?) {
+        if(typeof data === 'string' || Buffer.isBuffer(data)) {
+            if(typeof encoding === 'function') {
+                callback = encoding
+                encoding = undefined
+            }
+            this.write(data, encoding)
+        }
         this.callLamdaCallback()
         this._finished = true
         this._headersSent = true
+        
+        if(typeof data === 'function') {
+            callback = data
+        }
+        if(typeof callback === 'function') {
+            process.nextTick(callback)
+        }
     }
     private __send() {
 

@@ -4,10 +4,12 @@ const should = chai.should();
 import Request from './request'
 import {EventSource, PartialEventSource} from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
+import * as Logger from 'log'
+const log = new Logger()
 
 function createModel(customEventSource?: PartialEventSource) : Request {
     const eventSource = Object.assign({}, sampleEventSource, customEventSource || {})
-    return new Request(eventSource)
+    return new Request(eventSource, log)
 }
 
 describe('Request', function() {

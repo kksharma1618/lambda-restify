@@ -5,6 +5,7 @@ import * as uuid from 'uuid'
 import * as url from 'url'
 import { format } from 'util'
 const Negotiator = require('negotiator')
+import * as Logger from 'log'
 
 export default class Request {
 
@@ -14,7 +15,8 @@ export default class Request {
     public method: string
     public params: { [key: string]: string }
     public _meta: any = {}
-
+    public serverName: string
+    
     private negotiator
     private contentLengthCached: number | boolean
     private contentTypeCached: string
@@ -25,7 +27,7 @@ export default class Request {
 
 
 
-    constructor(private source: EventSource) {
+    constructor(private source: EventSource, public log: Logger) {
         this.headers = {}
         for (let key in source.headers) {
             this.headers[key.toLowerCase()] = source.headers[key]
