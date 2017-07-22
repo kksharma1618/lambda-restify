@@ -5,7 +5,7 @@ import * as uuid from 'uuid'
 import * as url from 'url'
 import { format } from 'util'
 const Negotiator = require('negotiator')
-import * as Logger from 'log'
+import Logger from './logger'
 
 export default class Request {
 

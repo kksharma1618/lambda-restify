@@ -6,7 +6,7 @@ import * as uuid from 'uuid'
 import Request from './request'
 import Response from './response'
 import Router from './router'
-import * as Logger from 'log'
+import Logger from './logger'
 import * as semver from 'semver'
 import { EventSource } from './event_source'
 import { LamdaCallback } from './lamda_callback'
@@ -17,8 +17,8 @@ import * as errors from 'restify-errors'
 export type HandlerFunction = (req: Request, res: Response, next: (err?: Error | null | false) => any) => any
 
 export default class Server extends EventEmitter {
-    private before: HandlerFunction[]
-    private chain: HandlerFunction[]
+    private before: HandlerFunction[] = []
+    private chain: HandlerFunction[] = []
     private versions: string[]
     private router: Router
     private routes: any = {}
@@ -28,13 +28,9 @@ export default class Server extends EventEmitter {
     constructor(private options: ServerOptions = {}) {
         super()
         this.versions = options.versions ? (Array.isArray(options.versions) ? options.versions : [options.versions]) : []
-        if (!options.log) {
-            options.log = new Logger("info")
-        }
-        options.log.warn = options.log.warn || options.log.warning
-        this.log = options.log
+        this.log = new Logger(options.logLevel || Logger.INFO)
         this.name = options.name || "LamdaRestify"
-        this.router = new Router(options)
+        this.router = new Router(options, this.log)
     }
     public pre(...args: any[]) {
         argumentsToChain(arguments).forEach(h => this.before.push(h))
@@ -70,6 +66,7 @@ export default class Server extends EventEmitter {
             throw new TypeError('handler (function) required')
         }
         let opts = args[0]
+        this.log.trace('addMethodRoute', method, opts)
         if (opts instanceof RegExp || typeof opts === 'string') {
             opts = {
                 path: opts
@@ -121,6 +118,8 @@ export default class Server extends EventEmitter {
         argumentsToChain(arguments, 2).forEach(addHandler)
         this.routes[route] = chain
 
+        this.log.trace('added method route', opts)
+
         return route
     }
     public param(name, fn) {
@@ -160,8 +159,10 @@ export default class Server extends EventEmitter {
         return this
     }
     public handleLamdaEvent(eventSource: EventSource, lamdaCallback: LamdaCallback) {
+        this.log.trace('handleLamdaEvent', eventSource)
         const req = new Request(eventSource, this.log)
         const res = new Response(lamdaCallback, req, this.log)
+        this.log.trace('req,res', req.toString(), res.toString())
         this.setupRequest(req, res)
         this.handleRequest(req, res)
     }
@@ -184,6 +185,7 @@ export default class Server extends EventEmitter {
     private handleRequest(req: Request, res: Response) {
         let self = this
         function routeAndRun() {
+            self.log.trace('routeAndRun', req.path())
             self.route(req, res, function (route, context) {
                 // emit 'routed' event after the req has been routed
                 self.emit('routed', req, res, route)
@@ -355,6 +357,7 @@ export default class Server extends EventEmitter {
     }
     private route(req, res, cb) {
         this.router.find(req, res, (err, route, ctx) => {
+            this.log.trace('router.find.res', err, route, ctx)
             let r = route ? route.name : null;
 
             if (err) {

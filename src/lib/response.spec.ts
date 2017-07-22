@@ -8,7 +8,7 @@ import Request from './request'
 import { LamdaCallback } from './lamda_callback'
 import { EventSource, PartialEventSource } from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
-import * as Logger from 'log'
+import Logger from './logger'
 const log = new Logger()
 
 function createRequestModel(customEventSource?: PartialEventSource): Request {

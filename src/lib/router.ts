@@ -7,7 +7,7 @@ import * as url from 'url'
 import Request from './request'
 import Response from './response'
 import LRU from './lru-cache'
-import * as Logger from 'log'
+import Logger from './logger'
 import * as semver from 'semver'
 import * as errors from 'restify-errors'
 const Negotiator = require('negotiator')
@@ -31,15 +31,13 @@ export default class Router extends EventEmitter {
     private reverse: any = {}
     private contentType: string[] = []
     private cache: LRU
-    private log: Logger
     private name = 'LamdaRestifyRouter'
 
-    constructor(private options: ServerOptions) {
+    constructor(private options: ServerOptions, private log: Logger) {
         super()
 
         assert.object(options, 'options')
-        assert.object(options.log, 'options.log')
-
+        
         this.cache = new LRU({ max: 100 })
         // this.contentType = options.contentType || []
 
@@ -49,8 +47,7 @@ export default class Router extends EventEmitter {
         // assert.arrayOfString(this.contentType, 'options.contentType')
 
         this.strict = Boolean(options.strictRouting)
-        this.log = options.log
-
+        
         let versions = options.versions || []
 
         if (!Array.isArray(versions)) {

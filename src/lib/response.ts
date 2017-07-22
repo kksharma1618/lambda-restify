@@ -4,7 +4,7 @@ import * as assert from 'assert-plus'
 import * as url from 'url'
 import { format as sprintf } from 'util'
 import * as mime from 'mime'
-import * as Logger from 'log'
+import Logger from './logger'
 
 import { createHttpError, createFormattersAndAcceptables, httpDate, shallowCopy, mergeQs, HEADER_ARRAY_BLACKLIST } from './restify_utils'
 
