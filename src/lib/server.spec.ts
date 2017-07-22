@@ -77,7 +77,7 @@ describe('Server', function () {
         }
     }
     async function makeRequest(url, method: httpMethod = 'GET', headers: any = {}, body = '') {
-        await utils.promiseFromCallback(function (next) {
+        return await utils.promiseFromCallback<any>(function (next) {
             triggerRequest(server, {
                 body: body,
                 headers: headers,
@@ -260,6 +260,29 @@ describe('Server', function () {
             await makeRequest('/vr', 'GET', {
                 'accept-version': '~2'
             })
+            testBodyInModelResponse('2.0.1')
+        })
+
+        it('should throw version error if no valid one exist', async () => {
+            server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
+                res.send('1.1.3')
+            })
+            const response = await makeRequest('/vr', 'GET', {
+                'accept-version': '~2'
+            })
+            testStatusCodeInModelResponse(400)
+            response.should.have.property('body')
+            response.body.should.include('InvalidVersionError')
+        })
+        it('should use latest once if no version specified', async () => {
+            server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
+                res.send('1.1.3')
+            })
+            server.get({ path: '/vr', version: '2.0.1' }, function (req, res) {
+                res.send('2.0.1')
+            })
+
+            await makeRequest('/vr')
             testBodyInModelResponse('2.0.1')
         })
     })
