@@ -10,6 +10,8 @@ import { EventSource, PartialEventSource } from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
 import Logger from './logger'
 const log = new Logger()
+import {createFormattersAndAcceptables} from './restify_utils'
+const fmt = createFormattersAndAcceptables()
 
 function createRequestModel(customEventSource?: PartialEventSource): Request {
     const eventSource = Object.assign({}, sampleEventSource, customEventSource || {})
@@ -22,7 +24,8 @@ function createModel(lamdaCallback?: LamdaCallback, customEventSource?: PartialE
 
         } as LamdaCallback
     }
-    return new Response(lamdaCallback, createRequestModel(customEventSource), log)
+
+    return new Response(lamdaCallback, createRequestModel(customEventSource), log, fmt.formatters, fmt.acceptable)
 }
 
 describe('Response', function () {

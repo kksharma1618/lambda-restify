@@ -5,10 +5,9 @@ import * as url from 'url'
 import { format as sprintf } from 'util'
 import * as mime from 'mime'
 import Logger from './logger'
+import {Formatters} from './server_options'
 
 import { createHttpError, createFormattersAndAcceptables, httpDate, shallowCopy, mergeQs, HEADER_ARRAY_BLACKLIST } from './restify_utils'
-
-const fmt = createFormattersAndAcceptables()
 
 export default class Response {
 
@@ -32,8 +31,8 @@ export default class Response {
     private _body = ''
     private _data: any
     private _charSet: string
-
-    constructor(private lamdaCallback: LamdaCallback, private req: Request, public log: Logger) {
+    
+    constructor(private lamdaCallback: LamdaCallback, private req: Request, public log: Logger, private formatters: Formatters, private acceptable: string[]) {
 
     }
     public cache(type?: any, options?: any) {
@@ -288,26 +287,26 @@ export default class Response {
         let formatter
         let type = this.header('Content-Type')
         // Check to see if we can find a valid formatter
-        if (!type && !this.req.accepts(fmt.acceptable)) {
+        if (!type && !this.req.accepts(this.acceptable)) {
             return _formatterError(createHttpError('could not find suitable formatter', 406))
         }
         // Derive type if not provided by the user
         if (!type) {
-            type = this.req.accepts(fmt.acceptable)
+            type = this.req.accepts(this.acceptable)
         }
         type = type.split(';')[0]
 
-        if (!fmt.formatters[type] && type.indexOf('/') === -1) {
+        if (!this.formatters[type] && type.indexOf('/') === -1) {
             type = mime.lookup(type)
         }
         
         // If we were unable to derive a valid type, default to treating it as
         // arbitrary binary data per RFC 2046 Section 4.5.1
-        if (!fmt.formatters[type] && fmt.acceptable.indexOf(type) === -1) {
+        if (!this.formatters[type] && this.acceptable.indexOf(type) === -1) {
             type = 'application/octet-stream';
         }
         
-        formatter = fmt.formatters[type] || fmt.formatters['*/*'];
+        formatter = this.formatters[type] || this.formatters['*/*'];
 
         // If after the above attempts we were still unable to derive a formatter,
         // provide a meaningful error message

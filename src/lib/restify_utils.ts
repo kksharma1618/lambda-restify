@@ -14,7 +14,7 @@ export function httpDate(now?) {
     return now.toUTCString()
 }
 
-export function createFormattersAndAcceptables() {
+export function createFormattersAndAcceptables(fmt?) {
     let arr: any[] = [];
     let obj = {};
 
@@ -45,6 +45,7 @@ export function createFormattersAndAcceptables() {
     }
 
     Object.keys(formatters).forEach(addFormatter.bind(null, formatters))
+    Object.keys(fmt || {}).forEach(addFormatter.bind(null, fmt || {}))
 
     arr = arr.sort(function (a, b) {
         return (b.q - a.q)

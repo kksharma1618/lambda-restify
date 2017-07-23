@@ -230,20 +230,22 @@ describe('Server', function () {
     })
 
     describe('params support', function () {
-        it('should match and provide params', function (done) {
+        it('should match and provide params', async () => {
             server.get('/users/:id/:task', function (req, res, next) {
                 res.send(req.params.id + ':' + req.params.task)
             })
-            triggerRequest(server, {
-                path: '/users/23/delete',
-                httpMethod: 'GET'
-            }, function () {
-                testBodyInModelResponse('23:delete')
-                done()
-            })
+            await makeRequest('/users/23/delete')
+            testBodyInModelResponse('23:delete')
         })
     })
     describe('version support', function () {
+
+        function checkInvalidVersionError() {
+            testStatusCodeInModelResponse(400)
+            response.should.have.property('body')
+            response.body.should.include('InvalidVersionError')
+        }
+
         it('should allow different version to coexist', async () => {
             server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
                 res.send('1.1.3')
@@ -267,12 +269,10 @@ describe('Server', function () {
             server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
                 res.send('1.1.3')
             })
-            const response = await makeRequest('/vr', 'GET', {
+            await makeRequest('/vr', 'GET', {
                 'accept-version': '~2'
             })
-            testStatusCodeInModelResponse(400)
-            response.should.have.property('body')
-            response.body.should.include('InvalidVersionError')
+            checkInvalidVersionError()
         })
         it('should use latest once if no version specified', async () => {
             server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
@@ -284,6 +284,122 @@ describe('Server', function () {
 
             await makeRequest('/vr')
             testBodyInModelResponse('2.0.1')
+        })
+        it('should support versionedUse', async () => {
+            server.versionedUse(['1.0.1', '2.0.3'], function (req, res) {
+                res.send('1,2')
+            })
+            server.versionedUse('3.1.2', function (req, res) {
+                res.send('3')
+            })
+            server.get({ path: '/v', version: ['1.0.1', '2.0.3', '3.1.2', '4.0.1'] }, function (req, res) {
+                res.send('nv')
+            })
+            await makeRequest('/v', 'GET', {
+                'accept-version': '~3'
+            })
+            testBodyInModelResponse('3')
+            await makeRequest('/v', 'GET', {
+                'accept-version': '~1'
+            })
+            testBodyInModelResponse('1,2')
+            await makeRequest('/v', 'GET', {
+                'accept-version': '~4'
+            })
+            testBodyInModelResponse('nv')
+            await makeRequest('/v', 'GET')
+            testBodyInModelResponse('nv')
+
+        })
+
+        it('should respect server.versions option', async () => {
+            
+            server.get('/p', function(req, res) {
+                res.send('a')
+            })
+            server.get({path: '/p', version: '2.1.1'}, function(req, res) {
+                res.send('b')
+            })
+            await makeRequest('/p', 'GET', {
+                'accept-version': '~1'
+            })
+            checkInvalidVersionError()
+
+            server = createModel({
+                versions: ['1.0.1']
+            })
+
+            server.get('/p', function(req, res) {
+                res.send('a')
+            })
+            server.get({path: '/p', version: '2.1.1'}, function(req, res) {
+                res.send('b')
+            })
+            await makeRequest('/p', 'GET', {
+                'accept-version': '~1'
+            })
+            testBodyInModelResponse('a')
+
+        })
+    })
+    describe('routing', function () {
+        it('should differentiate between different verbs', async () => {
+            server.get('/p', function (req, res) {
+                res.send('g')
+            })
+            server.post('/p', function (req, res) {
+                res.send('p')
+            })
+            await makeRequest('/p', 'GET')
+            testBodyInModelResponse('g')
+            await makeRequest('/p', 'POST')
+            testBodyInModelResponse('p')
+        })
+        it('should throw invalid method error if wrong method', async () => {
+            server.get('/p', (req, res) => { })
+
+            await makeRequest('/p', 'POST')
+
+            testStatusCodeInModelResponse(405)
+            response.should.have.property('body').which.includes('MethodNotAllowedError')
+        })
+        it('should respect strictRouting option', async () => {
+
+            server.get('/q', (req, res) => {
+                res.send('1')
+            })
+            await makeRequest('/q/')
+            testStatusCodeInModelResponse(200)
+
+            server = createModel({
+                strictRouting: true
+            })
+            server.get('/p', (req, res) => {
+                res.send('1')
+            })
+            await makeRequest('/p/')
+            testStatusCodeInModelResponse(404)
+        })
+    })
+    describe('custom formatters', function () {
+        it('should support formatters option', async () => {
+            server = createModel({
+                formatters: {
+                    'text/html': function (req: Request, res: Response, body: any) {
+                        let data = body ? body.toString() : ''
+                        data = '['+data+']'
+                        res.setHeader('Content-Length', Buffer.byteLength(data))
+                        return data
+                    }
+                }
+            })
+
+            server.get('/p', function(req, res) {
+                res.send('a')
+            })
+
+            await makeRequest('/p')
+            testBodyInModelResponse('[a]')
         })
     })
 })

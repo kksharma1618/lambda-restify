@@ -161,6 +161,7 @@ export default class Router extends EventEmitter {
         for (let i = 0; i < routes.length; i++) {
             try {
                 params = matchURL(routes[i].path, req.path())
+                // console.log('p', params, req.path())
             } catch (e) {
                 this.log.trace({ err: e }, 'error parsing URL')
                 callback(new errors.BadRequestError(e.message))
@@ -244,6 +245,7 @@ export default class Router extends EventEmitter {
         // version, we now need to go walk the reverse map and look at whether
         // we should return 405 or 404.
         if (params && r) {
+            // console.log('pr', params, r)
             cacheVal = {
                 methods: reverse,
                 name: r.name,

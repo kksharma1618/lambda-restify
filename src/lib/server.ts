@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
-import { ServerOptions } from './server_options'
-import { shallowCopy } from './restify_utils'
+import { ServerOptions, FormatterFunction, Formatters} from './server_options'
+import { shallowCopy, createFormattersAndAcceptables } from './restify_utils'
 import * as assert from 'assert-plus'
 import * as uuid from 'uuid'
 import Request from './request'
@@ -24,6 +24,8 @@ export default class Server extends EventEmitter {
     private routes: any = {}
     private log: Logger
     private name: string
+    private acceptable: string[]
+    private formatters: Formatters
 
     constructor(private options: ServerOptions = {}) {
         super()
@@ -31,6 +33,10 @@ export default class Server extends EventEmitter {
         this.log = new Logger(options.logLevel || Logger.INFO)
         this.name = options.name || "LamdaRestify"
         this.router = new Router(options, this.log)
+
+        const fmt = createFormattersAndAcceptables(options.formatters)
+        this.formatters = fmt.formatters
+        this.acceptable = fmt.acceptable
     }
     public pre(...args: any[]) {
         argumentsToChain(arguments).forEach(h => this.before.push(h))
@@ -145,11 +151,12 @@ export default class Server extends EventEmitter {
         })
 
         this.use((req, res, next) => {
-            let ver
-
-            if (req.version() === '*' ||
-                (ver = semver.maxSatisfying(versions as string[],
-                    req.version()) || false)) {
+            let reqVersion = req.version()
+            if(reqVersion === '*') {
+                return next()
+            }
+            let ver = semver.maxSatisfying(versions as string[], reqVersion)
+            if (ver) {
                 fn.call(this, req, res, next, ver)
             } else {
                 next()
@@ -161,7 +168,7 @@ export default class Server extends EventEmitter {
     public handleLamdaEvent(eventSource: EventSource, lamdaCallback: LamdaCallback) {
         this.log.trace('handleLamdaEvent', eventSource)
         const req = new Request(eventSource, this.log)
-        const res = new Response(lamdaCallback, req, this.log)
+        const res = new Response(lamdaCallback, req, this.log, this.formatters, this.acceptable)
         this.log.trace('req,res', req.toString(), res.toString())
         this.setupRequest(req, res)
         this.handleRequest(req, res)
