@@ -4,6 +4,9 @@
   "description": "A restify like interface for aws lamda with api gateway event source",
   "main": "build/index",
   "types": "build/index",
+  "engines" : { 
+    "node" : ">=6.10.0" 
+  },
   "scripts": {
     "prepublish": "npm run build",
     "build": "tsc",

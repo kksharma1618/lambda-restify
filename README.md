@@ -22,6 +22,9 @@ When your route handler sends response back (including headers, content), lamda-
 - Routing
 - Versioned apis
 
+## Dependency
+It requires node >= 6.10.0. Make sure you choose "6.10.2" or above while creating lamda function. At the time of writing lamda supports v4.3.2 and 6.10.2.
+
 ## Getting started
 
 ### Install the package using
