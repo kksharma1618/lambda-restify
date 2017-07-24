@@ -1,4 +1,8 @@
 # lamda-restify
+===========================
+
+[![Build Status](https://travis-ci.org/kksharma1618/lamda-restify.svg?branch=master)](https://travis-ci.org/kksharma1618/lamda-restify)
+
 A [restify](http://restify.com/)/[expressjs](https://expressjs.com/) like interface for aws lamda with api gateway event.
 
 ## Installation
