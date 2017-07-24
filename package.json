@@ -1,10 +1,11 @@
 {
   "name": "lamda-restify",
   "version": "1.0.0",
-  "description": "A restify like interface for aws lamda with api gateway event",
+  "description": "A restify like interface for aws lamda with api gateway event source",
   "main": "build/index",
   "types": "build/index",
   "scripts": {
+    "prepublish": "npm run build",
     "build": "tsc",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts"
