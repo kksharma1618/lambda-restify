@@ -30,7 +30,7 @@ It requires node >= 6.10.0. Make sure you choose "6.10.2" or above while creatin
 
 ## Getting started
 
-### Install the package using
+### Install the package
 ```
 npm install --save lamda-restify
 ```
