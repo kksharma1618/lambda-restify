@@ -1,6 +1,6 @@
 {
   "name": "lamda-restify",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A restify like interface for aws lamda with api gateway event source",
   "main": "build/index",
   "types": "build/index",
