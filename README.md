@@ -154,7 +154,13 @@ See [restify documentation](http://restify.com/docs/home/). Following items work
 - Server
     - pre(handlers)
     - use(handlers)
-    - get(path?, options?, handlers) [and del,head,opts,post,put,patch]
+    - get(path?, options?, handlers)
+    - del(path?, options?, handlers)
+    - head(path?, options?, handlers)
+    - opts(path?, options?, handlers)
+    - post(path?, options?, handlers)
+    - put(path?, options?, handlers)
+    - patch(path?, options?, handlers)
     - param(name, fn)
     - versionedUse(versions: string | string[], fn)
 
