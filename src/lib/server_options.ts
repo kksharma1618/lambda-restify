@@ -14,5 +14,6 @@ export interface ServerOptions {
     name?: string,
     versions?: string | string[],
     strictRouting?: boolean,
+    // comes with inbuilt application/x-www-form-urlencoded and application/json parser
     dontParseBody?: boolean
 }

@@ -12,9 +12,6 @@ export default function (req, res, next) {
     }
     switch(contentType) {
         case 'application/x-www-form-urlencoded':
-            // d[]=2&d[]=3 => d=2&d=3 
-            // both will be parsed as d: [2,3]
-            req.rawBody = req.rawBody.replace(/\[\]=/g, '=')
             req.body = qs.parse(req.rawBody)
         break
         case 'application/json':
