@@ -16,6 +16,8 @@ export default class Request {
     public params: { [key: string]: string }
     public _meta: any = {}
     public serverName: string
+    public body: string | object
+    public rawBody: string
     
     private negotiator
     private contentLengthCached: number | boolean
@@ -54,7 +56,7 @@ export default class Request {
             this.httpVersion = this.headers.via.split(' ')[0]
         }
         this.method = this.source.httpMethod
-
+        this.body = this.source.body
     }
     public header(name: string, value?: string) {
         assert.string(name, 'name')

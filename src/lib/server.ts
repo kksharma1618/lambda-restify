@@ -13,6 +13,7 @@ import { LamdaCallback } from './lamda_callback'
 import once from './once'
 import * as utils from './utils'
 import * as errors from 'restify-errors'
+import bodyParser from './body_parser'
 
 export type HandlerFunction = (req: Request, res: Response, next: (err?: Error | null | false) => any) => any
 
@@ -37,6 +38,10 @@ export default class Server extends EventEmitter {
         const fmt = createFormattersAndAcceptables(options.formatters)
         this.formatters = fmt.formatters
         this.acceptable = fmt.acceptable
+
+        if(!options.dontParseBody) {
+            this.pre(bodyParser)
+        }
     }
     public pre(...args: any[]) {
         argumentsToChain(arguments).forEach(h => this.before.push(h))

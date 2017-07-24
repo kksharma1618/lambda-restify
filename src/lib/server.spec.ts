@@ -402,4 +402,56 @@ describe('Server', function () {
             testBodyInModelResponse('[a]')
         })
     })
+
+    describe('body parser', function() {
+        it('should parse urlencoded body', async () => {
+            
+            server.post('/p', function(req, res) {
+                res.json(req.body)
+            })
+
+            await makeRequest('/p', 'POST', {
+                'content-type': 'application/x-www-form-urlencoded'
+            }, 'a=12&b=c&d=1&d=2')
+
+            testSuccessModelResponse()
+            response.should.have.property('body')
+            const b = JSON.parse(response.body)
+            b.should.have.property('a', '12')
+            b.should.have.property('b', 'c')
+            b.should.have.property('d').which.is.an('array').which.is.deep.equal(['1','2'])
+        })
+
+        it('should parse json body', async () => {
+            server.post('/p', function(req, res) {
+                res.json(req.body)
+            })
+
+            await makeRequest('/p', 'POST', {
+                'content-type': 'application/json'
+            }, JSON.stringify({a: 1, b: 2}))
+
+            testSuccessModelResponse()
+            response.should.have.property('body')
+            const b = JSON.parse(response.body)
+            b.should.have.property('a', 1)
+            b.should.have.property('b', 2)
+        })
+
+        it('should not parse when server.dontParseBody is set to true', async () => {
+            server = createModel({
+                dontParseBody: true
+            })
+            server.post('/p', function(req, res) {
+                res.send(req.body)
+            })
+
+            await makeRequest('/p', 'POST', {
+                'content-type': 'application/x-www-form-urlencoded'
+            }, 'a=12&b=c&d=1&d=2')
+
+            testSuccessModelResponse()
+            response.should.have.property('body', 'a=12&b=c&d=1&d=2')
+        })
+    })
 })

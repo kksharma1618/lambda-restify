@@ -13,5 +13,6 @@ export interface ServerOptions {
     logLevel?: LevelType,
     name?: string,
     versions?: string | string[],
-    strictRouting?: boolean
+    strictRouting?: boolean,
+    dontParseBody?: boolean
 }

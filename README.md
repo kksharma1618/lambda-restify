@@ -16,7 +16,7 @@ When you make an http request against aws apigateway it triggers aws lamda with 
 When your route handler sends response back (including headers, content), lamda-restify triggers lamda callback.
 
 ## Supported features
-- Full support for restify request/resposne api
+- Full support for restify request/response api
 - Pre routing hooks 
 - Middlewares
 - Routing
@@ -67,5 +67,96 @@ server.post('/user/:id', function(req, res) {
     const queryValue = req.query('queryKey')
 
     // body
+    const name = req.body.name
+
+    // send response with res.json or res.send
+    res.json({
+        status: 1
+    })
 })
+
+// define other route handlers
+
 ```
+
+### Attach lamda handler
+```
+exports.yourLamdaHandler = function(event, callback) {
+    server.handleLamdaEvent(event, callback)
+}
+```
+
+## Documentation
+See [restify documentation](http://restify.com/docs/home/). Following items work just as they did in restify:
+- Request:
+    - headers
+    - url
+    - httpVersion
+    - method
+    - params
+    - body
+    - rawBody
+    - header(name: string, defaultValue: string)
+    - accepts(type: string | string[])
+    - acceptsEncoding(type: string | string[])
+    - getContentLength()
+    - contentLength() [alias of getContentLength]
+    - getContentType()
+    - contentType() [alias of getContentType]
+    - time()
+    - date()
+    - getQuery()
+    - query() [alias of getQuery()]
+    - getUrl()
+    - href()
+    - id(reqId?: string)
+    - getId()
+    - getPath()
+    - path() [alias of getPath]
+    - is(type: string)
+    - isSecure()
+    - isChunked()
+    - toString()
+    - userAgent()
+    - version()
+    - matchedVersion()
+    - trailer(name: string, value?: string) [no trailers support. it just pass back the default value]
+    - isKeepAlive()
+    - isUpload()
+- Response
+    - finished
+    - headersSent
+    - sendDate
+    - statusCode
+    - statusMessage
+    - serverName
+    - cache(type?: any, options?: any)
+    - noCache()
+    - header(name: string, value?: any)
+    - setHeader(name: string, value: any)
+    - getHeaders()
+    - headers() [alias of getHeaders]
+    - send(code?: number, body?: string | json, headers?: json)
+    - sendRaw(code?: number, body?: string | json, headers?: json)
+    - removeHeader(name: string)
+    - writeHead(code?, message?, headers?)
+    - write(chunk: string | Buffer, encoding?: string, callback?: any)
+    - end(data?: string | Buffer, encoding?: string, callback?)
+    - get(name: string)
+    - json(code?, body?, headers?)
+    - link(l, rel)
+    - charSet(type: string)
+    - redirect(...)
+    - status(code: number)
+    - set(name: string | object, val?: string)
+    - getHeaderNames()
+    - hasHeader(name: string)
+- Server
+    - pre(handlers)
+    - use(handlers)
+    - get(path?, options?, handlers) [and del,head,opts,post,put,patch]
+    - param(name, fn)
+    - versionedUse(versions: string | string[], fn)
+
+**Server.handleLamdaEvent(lamdaEvent, lamdaCallback)**<br />
+Plug this into lamda handler to route all incoming lamda events.

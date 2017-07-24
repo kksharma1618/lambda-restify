@@ -109,12 +109,12 @@ export default class Response {
     public headers() {
         return this.getHeaders()
     }
-    public send(code?: any, object?: any, headers?: any) {
+    public send(code?: any, body?: any, headers?: any) {
         let args = Array.prototype.slice.call(arguments)
         args.push(true) // Append format = true to __send invocation
         return this.__send.apply(this, args)
     }
-    public sendRaw(code?: any, object?: any, headers?: any) {
+    public sendRaw(code?: any, body?: any, headers?: any) {
         let args = Array.prototype.slice.call(arguments)
         args.push(false) // Append format = false to __send invocation
         return this.__send.apply(this, args)
