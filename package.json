@@ -1,6 +1,6 @@
 {
   "name": "lambda-restify",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A restify like interface for aws lambda with api gateway event source",
   "main": "build/index",
   "types": "build/index",
@@ -20,8 +20,9 @@
   "keywords": [
     "aws",
     "lambda",
-    "lambda",
-    "restify"
+    "aws lambda",
+    "restify",
+    "serverless"
   ],
   "author": "Krishna Kant Sharma <kks@krishnakantsharma.com>",
   "license": "MIT",
