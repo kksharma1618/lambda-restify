@@ -87,7 +87,7 @@ server.post('/user/:id', function(req, res) {
 
 ### Attach lambda handler
 ```
-exports.yourlambdaHandler = function(event, callback) {
+exports.yourlambdaHandler = function(event, context, callback) {
     server.handlelambdaEvent(event, callback)
 }
 ```
