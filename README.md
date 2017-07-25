@@ -1,22 +1,22 @@
-# lamda-restify
+# lambda-restify
 
-[![Build Status](https://travis-ci.org/kksharma1618/lamda-restify.svg?branch=master)](https://travis-ci.org/kksharma1618/lamda-restify)
+[![Build Status](https://travis-ci.org/kksharma1618/lambda-restify.svg?branch=master)](https://travis-ci.org/kksharma1618/lambda-restify)
 
-A [restify](http://restify.com/)/[expressjs](https://expressjs.com/) like interface for aws lamda with api gateway event.
+A [restify](http://restify.com/)/[expressjs](https://expressjs.com/) like interface for aws lambda with api gateway event.
 
 ## Installation
 ```
-npm install --save lamda-restify
+npm install --save lambda-restify
 ```
 
 ## What is it about
-If you are writing [aws lamda function](https://aws.amazon.com/lambda/) to develop rest apis using [aws api gateway](https://aws.amazon.com/api-gateway/), this package will help you with request/response/routing/middlewares/versioned apis type features generally found in packages like restify or express.
+If you are writing [aws lambda function](https://aws.amazon.com/lambda/) to develop rest apis using [aws api gateway](https://aws.amazon.com/api-gateway/), this package will help you with request/response/routing/middlewares/versioned apis type features generally found in packages like restify or express.
 
-Instead of using http module for opening a server and listening for incoming requests, this package relies on lamda event and callback.
+Instead of using http module for opening a server and listening for incoming requests, this package relies on lambda event and callback.
 
-When you make an http request against aws apigateway it triggers aws lamda with an event containing all the information about the incoming request (like method, url, querystring, headers, and body). lamda-restify relies on that information to create request object.
+When you make an http request against aws apigateway it triggers aws lambda with an event containing all the information about the incoming request (like method, url, querystring, headers, and body). lambda-restify relies on that information to create request object.
 
-When your route handler sends response back (including headers, content), lamda-restify triggers lamda callback.
+When your route handler sends response back (including headers, content), lambda-restify triggers lambda callback.
 
 ## Supported features
 - Full support for restify request/response api
@@ -26,24 +26,24 @@ When your route handler sends response back (including headers, content), lamda-
 - Versioned apis
 
 ## Dependency
-It requires node >= 6.10.0. Make sure you choose "6.10.2" or above while creating lamda function. At the time of writing lamda supports v4.3.2 and 6.10.2.
+It requires node >= 6.10.0. Make sure you choose "6.10.2" or above while creating lambda function. At the time of writing lambda supports v4.3.2 and 6.10.2.
 
 ## Getting started
 
 ### Install the package
 ```
-npm install --save lamda-restify
+npm install --save lambda-restify
 ```
 ### Create server
-See list of supported options [here](https://github.com/kksharma1618/lamda-restify/blob/master/src/lib/server_options.ts).
+See list of supported options [here](https://github.com/kksharma1618/lambda-restify/blob/master/src/lib/server_options.ts).
 
 ```
-const Server = require('lamda-restify');
+const Server = require('lambda-restify');
 const server = new Server(options);
 ```
 
 ### Attach your routes and middlewares
-See [restify documentation](http://restify.com/docs/home/) for documentation on server.pre, server.use, server.get (and other http verbs). Since lamda-restify uses restify like interface all that docs apply here as well.
+See [restify documentation](http://restify.com/docs/home/) for documentation on server.pre, server.use, server.get (and other http verbs). Since lambda-restify uses restify like interface all that docs apply here as well.
 
 ```
 server.pre(function(req, res, next) {
@@ -85,10 +85,10 @@ server.post('/user/:id', function(req, res) {
 
 ```
 
-### Attach lamda handler
+### Attach lambda handler
 ```
-exports.yourLamdaHandler = function(event, callback) {
-    server.handleLamdaEvent(event, callback)
+exports.yourlambdaHandler = function(event, callback) {
+    server.handlelambdaEvent(event, callback)
 }
 ```
 
@@ -170,5 +170,5 @@ See [restify documentation](http://restify.com/docs/home/). Following items work
     - param(name, fn)
     - versionedUse(versions: string | string[], fn)
 
-**Server.handleLamdaEvent(lamdaEvent, lamdaCallback)**<br />
-Plug this into lamda handler to route all incoming lamda events.
+**Server.handlelambdaEvent(lambdaEvent, lambdaCallback)**<br />
+Plug this into lambda handler to route all incoming lambda events.

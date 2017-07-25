@@ -31,7 +31,7 @@ export default class Router extends EventEmitter {
     private reverse: any = {}
     private contentType: string[] = []
     private cache: LRU
-    private name = 'LamdaRestifyRouter'
+    private name = 'lambdaRestifyRouter'
 
     constructor(private options: ServerOptions, private log: Logger) {
         super()

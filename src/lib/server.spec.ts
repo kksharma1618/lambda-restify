@@ -7,7 +7,7 @@ import Response from './response'
 import Request from './request'
 import Server from './server'
 import { ServerOptions } from './server_options'
-import { LamdaCallback } from './lamda_callback'
+import { lambdaCallback } from './lambda_callback'
 import { EventSource, PartialEventSource, httpMethod } from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
 import Logger from './logger'
@@ -27,17 +27,17 @@ function createEventSource(customEventSource?: PartialEventSource) {
     }
     return Object.assign({}, sampleEventSource, customEventSource || {})
 }
-function createLamdaCallback(next?) {
+function createlambdaCallback(next?) {
     return function (error, result) {
         responseError = error
         response = result
         if (next) {
             next(error, result)
         }
-    } as LamdaCallback
+    } as lambdaCallback
 }
 function triggerRequest(server: Server, customEventSource?: PartialEventSource, onResponse?) {
-    server.handleLamdaEvent(createEventSource(customEventSource), createLamdaCallback(onResponse))
+    server.handlelambdaEvent(createEventSource(customEventSource), createlambdaCallback(onResponse))
 }
 
 

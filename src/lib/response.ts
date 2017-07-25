@@ -1,4 +1,4 @@
-import { LamdaCallback } from './lamda_callback'
+import { lambdaCallback } from './lambda_callback'
 import Request from './request'
 import * as assert from 'assert-plus'
 import * as url from 'url'
@@ -27,12 +27,12 @@ export default class Response {
     public version: string
     
     private _headers: { [key: string]: string | string[] } = {}
-    private lamdaCallbackCalled = false
+    private lambdaCallbackCalled = false
     private _body = ''
     private _data: any
     private _charSet: string
     
-    constructor(private lamdaCallback: LamdaCallback, private req: Request, public log: Logger, private formatters: Formatters, private acceptable: string[]) {
+    constructor(private lambdaCallback: lambdaCallback, private req: Request, public log: Logger, private formatters: Formatters, private acceptable: string[]) {
 
     }
     public cache(type?: any, options?: any) {
@@ -164,7 +164,7 @@ export default class Response {
             }
             this.write(data, encoding)
         }
-        this.callLamdaCallback()
+        this.calllambdaCallback()
         this._finished = true
         this._headersSent = true
         
@@ -324,10 +324,10 @@ export default class Response {
         // Finally, invoke the formatter and flush the request with it's results
         return _flush(formatter(this.req, this, body))
     }
-    private callLamdaCallback() {
-        if (!this.lamdaCallbackCalled) {
-            this.lamdaCallbackCalled = true
-            this.lamdaCallback(null, {
+    private calllambdaCallback() {
+        if (!this.lambdaCallbackCalled) {
+            this.lambdaCallbackCalled = true
+            this.lambdaCallback(null, {
                 statusCode: this.statusCode + '',
                 body: this._body || this.statusMessage || '',
                 headers: this.getHeaders()
@@ -362,7 +362,7 @@ export default class Response {
         let finalUri
         let redirectLocation
         let next
-        // next is not mendatary in lamda restify version
+        // next is not mendatary in lambda restify version
 
         // 1) this is signature 1, where an explicit status code is passed in.
         //    MUST guard against null here, passing null is likely indicative

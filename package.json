@@ -1,7 +1,7 @@
 {
-  "name": "lamda-restify",
+  "name": "lambda-restify",
   "version": "1.0.2",
-  "description": "A restify like interface for aws lamda with api gateway event source",
+  "description": "A restify like interface for aws lambda with api gateway event source",
   "main": "build/index",
   "types": "build/index",
   "engines" : { 
@@ -15,20 +15,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kksharma1618/lamda-restify.git"
+    "url": "git+https://github.com/kksharma1618/lambda-restify.git"
   },
   "keywords": [
     "aws",
-    "lamda",
-    "lamda",
+    "lambda",
+    "lambda",
     "restify"
   ],
   "author": "Krishna Kant Sharma <kks@krishnakantsharma.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kksharma1618/lamda-restify/issues"
+    "url": "https://github.com/kksharma1618/lambda-restify/issues"
   },
-  "homepage": "https://github.com/kksharma1618/lamda-restify#readme",
+  "homepage": "https://github.com/kksharma1618/lambda-restify#readme",
   "devDependencies": {
     "@types/assert-plus": "^1.0.3",
     "@types/chai": "^3.5.2",

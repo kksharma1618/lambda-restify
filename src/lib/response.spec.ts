@@ -5,7 +5,7 @@ const expect = chai.expect
 import * as restifyErrors from 'restify-errors'
 import Response from './response'
 import Request from './request'
-import { LamdaCallback } from './lamda_callback'
+import { lambdaCallback } from './lambda_callback'
 import { EventSource, PartialEventSource } from './event_source'
 const sampleEventSource: EventSource = require('../../tests/data/sample_event_source')
 import Logger from './logger'
@@ -18,14 +18,14 @@ function createRequestModel(customEventSource?: PartialEventSource): Request {
     return new Request(eventSource, log)
 }
 
-function createModel(lamdaCallback?: LamdaCallback, customEventSource?: PartialEventSource): Response {
-    if (!lamdaCallback) {
-        lamdaCallback = function (error, result) {
+function createModel(lambdaCallback?: lambdaCallback, customEventSource?: PartialEventSource): Response {
+    if (!lambdaCallback) {
+        lambdaCallback = function (error, result) {
 
-        } as LamdaCallback
+        } as lambdaCallback
     }
 
-    return new Response(lamdaCallback, createRequestModel(customEventSource), log, fmt.formatters, fmt.acceptable)
+    return new Response(lambdaCallback, createRequestModel(customEventSource), log, fmt.formatters, fmt.acceptable)
 }
 
 describe('Response', function () {
@@ -36,7 +36,7 @@ describe('Response', function () {
     function setupNewModel(customEventSource?: PartialEventSource) {
         model = createModel(function (error, result) {
             modelResponse = { error, result }
-        } as LamdaCallback, customEventSource)
+        } as lambdaCallback, customEventSource)
     }
 
     beforeEach(() => {

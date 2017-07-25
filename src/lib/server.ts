@@ -9,7 +9,7 @@ import Router from './router'
 import Logger from './logger'
 import * as semver from 'semver'
 import { EventSource } from './event_source'
-import { LamdaCallback } from './lamda_callback'
+import { lambdaCallback } from './lambda_callback'
 import once from './once'
 import * as utils from './utils'
 import * as errors from 'restify-errors'
@@ -32,7 +32,7 @@ export default class Server extends EventEmitter {
         super()
         this.versions = options.versions ? (Array.isArray(options.versions) ? options.versions : [options.versions]) : []
         this.log = new Logger(options.logLevel || Logger.INFO)
-        this.name = options.name || "LamdaRestify"
+        this.name = options.name || "lambdaRestify"
         this.router = new Router(options, this.log)
 
         const fmt = createFormattersAndAcceptables(options.formatters)
@@ -170,10 +170,10 @@ export default class Server extends EventEmitter {
 
         return this
     }
-    public handleLamdaEvent(eventSource: EventSource, lamdaCallback: LamdaCallback) {
-        this.log.trace('handleLamdaEvent', eventSource)
+    public handlelambdaEvent(eventSource: EventSource, lambdaCallback: lambdaCallback) {
+        this.log.trace('handlelambdaEvent', eventSource)
         const req = new Request(eventSource, this.log)
-        const res = new Response(lamdaCallback, req, this.log, this.formatters, this.acceptable)
+        const res = new Response(lambdaCallback, req, this.log, this.formatters, this.acceptable)
         this.log.trace('req,res', req.toString(), res.toString())
         this.setupRequest(req, res)
         this.handleRequest(req, res)
