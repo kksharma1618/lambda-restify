@@ -39,16 +39,16 @@ export default class Server extends EventEmitter {
         this.formatters = fmt.formatters
         this.acceptable = fmt.acceptable
 
-        if(!options.dontParseBody) {
+        if (!options.dontParseBody) {
             this.pre(bodyParser)
         }
     }
     public pre(...args: any[]) {
-        argumentsToChain(arguments).forEach(h => this.before.push(h))
+        argumentsToChain(arguments).forEach((h) => this.before.push(h))
         return this
     }
     public use(...args: any[]) {
-        argumentsToChain(arguments).forEach(h => this.chain.push(h))
+        argumentsToChain(arguments).forEach((h) => this.chain.push(h))
         return this
     }
     public del(...args: any[]) {
@@ -72,67 +72,6 @@ export default class Server extends EventEmitter {
     public patch(...args: any[]) {
         return this.addMethodRoute('patch', ...args)
     }
-    private addMethodRoute(method: string, ...args: any[]) {
-        if (args.length < 2) {
-            throw new TypeError('handler (function) required')
-        }
-        let opts = args[0]
-        this.log.trace('addMethodRoute', method, opts)
-        if (opts instanceof RegExp || typeof opts === 'string') {
-            opts = {
-                path: opts
-            }
-        } else if (typeof opts === 'object') {
-            opts = shallowCopy(opts)
-        } else {
-            throw new TypeError('path (string) required')
-        }
-
-
-
-        let chain: HandlerFunction[] = []
-        let route
-        let self = this
-
-        function addHandler(h: HandlerFunction) {
-            assert.func(h, 'handler')
-            chain.push(h)
-        }
-
-        opts.method = method.toUpperCase()
-
-        opts.versions = opts.versions || opts.version || self.versions
-
-        if (!Array.isArray(opts.versions)) {
-            opts.versions = [opts.versions]
-        }
-
-        if (!opts.name) {
-            opts.name = method + '-' + (opts.path || opts.url)
-
-            if (opts.versions.length > 0) {
-                opts.name += '-' + opts.versions.join('--')
-            }
-
-            opts.name = opts.name.replace(/\W/g, '').toLowerCase()
-
-            if (this.router.mounts[opts.name]) { // GH-401
-                opts.name += uuid.v4().substr(0, 7)
-            }
-        }
-
-        if (!(route = this.router.mount(opts))) {
-            return false
-        }
-
-        this.chain.forEach(addHandler)
-        argumentsToChain(arguments, 2).forEach(addHandler)
-        this.routes[route] = chain
-
-        this.log.trace('added method route', opts)
-
-        return route
-    }
     public param(name, fn) {
         this.use((req, res, next) => {
             if (req.params && req.params[name]) {
@@ -149,18 +88,18 @@ export default class Server extends EventEmitter {
         }
         assert.arrayOfString(versions, 'versions');
 
-        versions.forEach(function (v) {
+        versions.forEach((v) => {
             if (!semver.valid(v)) {
                 throw new TypeError(v + ' is not a valid semver')
             }
         })
 
         this.use((req, res, next) => {
-            let reqVersion = req.version()
-            if(reqVersion === '*') {
+            const reqVersion = req.version()
+            if (reqVersion === '*') {
                 return next()
             }
-            let ver = semver.maxSatisfying(versions as string[], reqVersion)
+            const ver = semver.maxSatisfying(versions as string[], reqVersion)
             if (ver) {
                 fn.call(this, req, res, next, ver)
             } else {
@@ -195,17 +134,17 @@ export default class Server extends EventEmitter {
         res.version = this.router.versions[this.router.versions.length - 1]
     }
     private handleRequest(req: Request, res: Response) {
-        let self = this
+        const self = this
         function routeAndRun() {
             self.log.trace('routeAndRun', req.path())
-            self.route(req, res, function (route, context) {
+            self.route(req, res, (route, context) => {
                 // emit 'routed' event after the req has been routed
                 self.emit('routed', req, res, route)
                 req._meta.context = req.params = context
                 req._meta.route = route.spec
 
-                let r = route ? route.name : null
-                let chain = self.routes[r]
+                const r = route ? route.name : null
+                const chain = self.routes[r]
 
                 self.runHandlerChain(req, res, route, chain, function done(e) {
                     self.log.trace('ranReqResCycle', e)
@@ -215,7 +154,7 @@ export default class Server extends EventEmitter {
 
         // run pre() handlers first before routing and running
         if (self.before.length > 0) {
-            self.runHandlerChain(req, res, null, self.before, function (err) {
+            self.runHandlerChain(req, res, null, self.before, (err) => {
                 // check for return false here - like with the regular handlers,
                 // if false is returned we already sent a response and should stop
                 // processing.
@@ -231,7 +170,6 @@ export default class Server extends EventEmitter {
         }
     }
     private runHandlerChain(req: Request, res: Response, route, chain: HandlerFunction[], cb) {
-        let d
         let i = -1
 
         if (!req._meta.anonFuncCount) {
@@ -241,8 +179,8 @@ export default class Server extends EventEmitter {
             // the lifetime of this request
             req._meta.anonFuncCount = 0
         }
-        let log = this.log
-        let self = this
+        const log = this.log
+        const self = this
         let handlerName: string
         let emittedError = false
 
@@ -278,17 +216,17 @@ export default class Server extends EventEmitter {
                         return
                     }
 
-                    let errName = arg.name.replace(/Error$/, '');
+                    const errName = arg.name.replace(/Error$/, '');
                     log.trace({
                         err: arg,
-                        errName: errName
+                        errName
                     }, 'next(err=%s)', (arg.name || 'Error'));
 
                     // always attempt to use the most specific error listener
                     // possible. fall back on generic 'error' listener if we can't
                     // find one for the error we got.
                     let hasErrListeners = false
-                    let errEvtNames: string[] = []
+                    const errEvtNames: string[] = []
 
                     // if we have listeners for the specific error
                     if (self.listeners(errName).length > 0) {
@@ -302,14 +240,15 @@ export default class Server extends EventEmitter {
                     }
 
                     if (hasErrListeners) {
-                        Promise.all(errEvtNames.map(function (evtName) {
-                            return utils.promiseFromCallback(function (cb) {
+                        Promise.all(errEvtNames.map((evtName) => {
+                            // tslint:disable-next-line:no-shadowed-variable
+                            return utils.promiseFromCallback((cb) => {
                                 self.emit(evtName, req, res, arg, cb)
                             })
-                        })).then(function () {
+                        })).then(() => {
                             res.send(arg)
                             cb(arg)
-                        }).catch(function (err) {
+                        }).catch((err) => {
                             res.send(err)
                             cb(err)
                         })
@@ -324,7 +263,6 @@ export default class Server extends EventEmitter {
             if (arg === false) {
                 done = true
             }
-
 
             // Run the next handler up
             if (!done && chain[++i]) {
@@ -343,9 +281,7 @@ export default class Server extends EventEmitter {
                 req._meta.currentHandler = handlerName;
                 // req.startHandlerTimer(handlerName);
 
-                let n = once(next)
-
-                return chain[i].call(self, req, res, n)
+                return chain[i].call(self, req, res, once(next))
             }
 
             // if (route === null) {
@@ -370,7 +306,7 @@ export default class Server extends EventEmitter {
     private route(req, res, cb) {
         this.router.find(req, res, (err, route, ctx) => {
             this.log.trace('router.find.res', err, route, ctx)
-            let r = route ? route.name : null;
+            const r = route ? route.name : null;
 
             if (err) {
                 if (!optionsError(err, req, res)) {
@@ -384,6 +320,65 @@ export default class Server extends EventEmitter {
             }
         });
     }
+    private addMethodRoute(method: string, ...args: any[]) {
+        if (args.length < 2) {
+            throw new TypeError('handler (function) required')
+        }
+        let opts = args[0]
+        this.log.trace('addMethodRoute', method, opts)
+        if (opts instanceof RegExp || typeof opts === 'string') {
+            opts = {
+                path: opts
+            }
+        } else if (typeof opts === 'object') {
+            opts = shallowCopy(opts)
+        } else {
+            throw new TypeError('path (string) required')
+        }
+
+        const chain: HandlerFunction[] = []
+        let route
+        const self = this
+
+        function addHandler(h: HandlerFunction) {
+            assert.func(h, 'handler')
+            chain.push(h)
+        }
+
+        opts.method = method.toUpperCase()
+
+        opts.versions = opts.versions || opts.version || self.versions
+
+        if (!Array.isArray(opts.versions)) {
+            opts.versions = [opts.versions]
+        }
+
+        if (!opts.name) {
+            opts.name = method + '-' + (opts.path || opts.url)
+
+            if (opts.versions.length > 0) {
+                opts.name += '-' + opts.versions.join('--')
+            }
+
+            opts.name = opts.name.replace(/\W/g, '').toLowerCase()
+
+            if (this.router.mounts[opts.name]) { // GH-401
+                opts.name += uuid.v4().substr(0, 7)
+            }
+        }
+        route = this.router.mount(opts)
+        if (!route) {
+            return false
+        }
+
+        this.chain.forEach(addHandler)
+        argumentsToChain(arguments, 2).forEach(addHandler)
+        this.routes[route] = chain
+
+        this.log.trace('added method route', opts)
+
+        return route
+    }
 }
 
 function argumentsToChain(args, start = 0) {
@@ -394,15 +389,15 @@ function argumentsToChain(args, start = 0) {
         throw new TypeError('handler (function) required')
     }
 
-    let chain: HandlerFunction[] = [];
+    const chain: HandlerFunction[] = [];
 
     function process(handlers) {
-        for (let i = 0; i < handlers.length; i++) {
-            if (Array.isArray(handlers[i])) {
-                process(handlers[i])
+        for (const handler of handlers) {
+            if (Array.isArray(handler)) {
+                process(handler)
             } else {
-                assert.func(handlers[i], 'handler');
-                chain.push(handlers[i])
+                assert.func(handler, 'handler');
+                chain.push(handler)
             }
         }
         return (chain)
@@ -421,7 +416,7 @@ function argumentsToChain(args, start = 0) {
  * @returns  {Boolean}
  */
 function optionsError(err, req: Request, res: Response) {
-    
+
     if (err.statusCode === 404 && req.method === 'OPTIONS' && req.url === '*') {
         res.send(200)
         return true
@@ -453,12 +448,12 @@ function emitRouteError(server: Server, req: Request, res: Response, err) {
         name = err.name.replace(/Error$/, '')
     }
 
-    req.log.trace({name: name, err: err}, 'entering emitRouteError');
+    req.log.trace({name, err}, 'entering emitRouteError');
 
     if (server.listeners(name).length > 0) {
-        server.emit(name, req, res, err, once(function () {
+        server.emit(name, req, res, err, once(() => {
             res.send(err)
-        }));
+        }))
     } else {
         res.send(err)
     }

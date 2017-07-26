@@ -6,4 +6,3 @@ export {LamdaCallback} from './lib/lambda_callback'
 
 import Server from './lib/server'
 export default Server
-
