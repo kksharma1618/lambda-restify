@@ -1,4 +1,4 @@
-export type lambdaCallback = (error: Error | null, result?: {
+export type LamdaCallback = (error: Error | null, result?: {
     statusCode?: string,
     body?: string,
     headers?: {

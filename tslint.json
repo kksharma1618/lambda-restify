@@ -23,7 +23,10 @@
 		"interface-name": [
             false
 		],
-		"no-empty": false
+        "no-empty": false,
+        "one-variable-per-declaration": [
+            false
+        ]
     },
     "rulesDirectory": []
 }

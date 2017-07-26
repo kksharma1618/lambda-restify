@@ -9,7 +9,7 @@ import Router from './router'
 import Logger from './logger'
 import * as semver from 'semver'
 import { EventSource } from './event_source'
-import { lambdaCallback } from './lambda_callback'
+import { LamdaCallback } from './lambda_callback'
 import once from './once'
 import * as utils from './utils'
 import * as errors from 'restify-errors'
@@ -170,7 +170,7 @@ export default class Server extends EventEmitter {
 
         return this
     }
-    public handlelambdaEvent(eventSource: EventSource, lambdaCallback: lambdaCallback) {
+    public handlelambdaEvent(eventSource: EventSource, lambdaCallback: LamdaCallback) {
         this.log.trace('handlelambdaEvent', eventSource)
         const req = new Request(eventSource, this.log)
         const res = new Response(lambdaCallback, req, this.log, this.formatters, this.acceptable)
