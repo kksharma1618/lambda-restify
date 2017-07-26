@@ -4,4 +4,4 @@ export type lambdaCallback = (error: Error | null, result?: {
     headers?: {
         [key: string]: string
     }
-}) => {}
+}) => any
