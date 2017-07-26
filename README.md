@@ -37,7 +37,7 @@ npm install --save lambda-restify
 ### Create server
 See list of supported options [here](https://github.com/kksharma1618/lambda-restify/blob/master/src/lib/server_options.ts).
 
-```
+``` javascript
 const Server = require('lambda-restify');
 const server = new Server(options);
 ```
@@ -45,7 +45,7 @@ const server = new Server(options);
 ### Attach your routes and middlewares
 See [restify documentation](http://restify.com/docs/home/) for documentation on server.pre, server.use, server.get (and other http verbs). Since lambda-restify uses restify like interface all that docs apply here as well.
 
-```
+``` javascript
 server.pre(function(req, res, next) {
     // this handler is run for all routes, even 404
     
@@ -86,7 +86,7 @@ server.post('/user/:id', function(req, res) {
 ```
 
 ### Attach lambda handler
-```
+``` javascript
 exports.yourlambdaHandler = function(event, context, callback) {
     server.handlelambdaEvent(event, callback)
 }
