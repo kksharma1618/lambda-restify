@@ -12,7 +12,7 @@ export default class LruCache {
         return this.items.has(key)
     }
     public get(key: string, defaultValue?) {
-        if(!this.has(key)) {
+        if (!this.has(key)) {
             return defaultValue
         }
         this.makeKeyRecent(key)
@@ -25,7 +25,7 @@ export default class LruCache {
     }
     public del(key: string) {
         const ik = this.itemKeys.indexOf(key)
-        if(ik >= 0) {
+        if (ik >= 0) {
             this.itemKeys.splice(ik, 1)
         }
         this.items.delete(key)
@@ -34,19 +34,18 @@ export default class LruCache {
     private makeKeyRecent(key: string) {
 
         const index = this.itemKeys.indexOf(key)
-        if(index === 0) {
+        if (index === 0) {
             // already most recent
             return
         }
-        if(index > 0) {
+        if (index > 0) {
             // has, but not first
             this.itemKeys.splice(index, 1)
             this.itemKeys.unshift(key)
-        }
-        else {
+        } else {
             // doesnt have
             this.itemKeys.unshift(key)
-            if(this.itemKeys.length > this.max) {
+            if (this.itemKeys.length > this.max) {
                 this.del(this.itemKeys.pop() as string)
             }
         }

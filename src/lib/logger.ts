@@ -12,22 +12,9 @@ export default class Logger {
     public static readonly DEBUG = 5
     public static readonly TRACE = 6
 
-
     constructor(private level: LevelType = 4, private stream = process.stdout) {
         assert.ok(typeof level === 'number', "level")
         assert.ok(level >= 1 && level <= 6, "level")
-    }
-    private log(levelStr, args) {
-        if(Logger[levelStr] > this.level) {
-            return
-        }
-
-        this.stream.write(
-            '[' + new Date + ']'
-            + ' ' + levelStr
-            + ' ' + format.apply(null, args)
-            + '\n'
-        )
     }
     public fatal(...args: any[]) {
         return this.log("FATAL", args)
@@ -46,5 +33,17 @@ export default class Logger {
     }
     public trace(...args: any[]) {
         return this.log("TRACE", args)
+    }
+    private log(levelStr, args) {
+        if (Logger[levelStr] > this.level) {
+            return
+        }
+
+        this.stream.write(
+            '[' + new Date() + ']'
+            + ' ' + levelStr
+            + ' ' + format.apply(null, args)
+            + '\n'
+        )
     }
 }

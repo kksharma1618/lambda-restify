@@ -22,7 +22,8 @@
 		],
 		"interface-name": [
             false
-        ]
+		],
+		"no-empty": false
     },
     "rulesDirectory": []
 }
