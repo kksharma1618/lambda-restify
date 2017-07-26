@@ -37,7 +37,7 @@ export default class Router extends EventEmitter {
         super()
 
         assert.object(options, 'options')
-        
+
         this.cache = new LRU({ max: 100 })
         // this.contentType = options.contentType || []
 
@@ -47,7 +47,7 @@ export default class Router extends EventEmitter {
         // assert.arrayOfString(this.contentType, 'options.contentType')
 
         this.strict = Boolean(options.strictRouting)
-        
+
         let versions = options.versions || []
 
         if (!Array.isArray(versions)) {
@@ -56,7 +56,7 @@ export default class Router extends EventEmitter {
         assert.arrayOfString(versions, 'options.versions')
         this.versions = versions
 
-        this.versions.forEach(function (v) {
+        this.versions.forEach((v) => {
             if (semver.valid(v)) {
                 return true
             }
@@ -65,18 +65,16 @@ export default class Router extends EventEmitter {
         })
         this.versions.sort()
     }
-
-
     public mount(options: any) {
         assert.object(options, 'options')
         assert.string(options.method, 'options.method')
         assert.string(options.name, 'options.name')
 
         let exists
-        let name = options.name
+        const name = options.name
         let route
-        let routes = this.routes[options.method]
-        let self = this
+        const routes = this.routes[options.method]
+        const self = this
         let type = options.contentType || self.contentType
         let versions = options.versions || options.version || self.versions
 
@@ -84,7 +82,7 @@ export default class Router extends EventEmitter {
             if (!Array.isArray(type)) {
                 type = [type]
             }
-            type.filter(function (t) {
+            type.filter((t) => {
                 return (t)
             }).sort().join()
         }
@@ -96,7 +94,7 @@ export default class Router extends EventEmitter {
             versions.sort()
         }
 
-        exists = routes.some(function (r) {
+        exists = routes.some((r) => {
             return r.name === name
         })
 
@@ -105,7 +103,7 @@ export default class Router extends EventEmitter {
         }
 
         route = {
-            name: name,
+            name,
             method: options.method,
             path: compileURL({
                 url: options.path || options.url,
@@ -115,7 +113,7 @@ export default class Router extends EventEmitter {
             }),
             spec: options,
             types: type,
-            versions: versions
+            versions
         }
         routes.push(route)
 
@@ -139,19 +137,19 @@ export default class Router extends EventEmitter {
     }
     public find(req: Request, res: Response, callback) {
         let candidates: any[] = []
-        let ct = req.headers['content-type'] || DEF_CT
-        let cacheKey = req.method + req.url + req.version() + ct
+        const ct = req.headers['content-type'] || DEF_CT
+        const cacheKey = req.method + req.url + req.version() + ct
         let cacheVal
         let neg
         let params
         let r
         let reverse
-        let routes = this.routes[req.method] || []
+        const routes = this.routes[req.method] || []
         let typed
         let versioned
         let maxV
-
-        if ((cacheVal = this.cache.get(cacheKey))) {
+        cacheVal = this.cache.get(cacheKey)
+        if (cacheVal) {
             res._meta.methods = cacheVal.methods.slice()
             req._meta.matchedVersion = cacheVal.matchedVersion
             callback(null, cacheVal, shallowCopy(cacheVal.params))
@@ -204,15 +202,15 @@ export default class Router extends EventEmitter {
         if (!r) {
             // If upload and typed
             if (typed) {
-                let _t = ct.split(/\s*,\s*/)
-                candidates = candidates.filter(function (c) {
+                const t = ct.split(/\s*,\s*/)
+                candidates = candidates.filter((c) => {
                     neg = new Negotiator({
                         headers: {
                             accept: c.r.types.join(', ')
                         }
                     })
-                    let tmp = neg.preferredMediaType(_t)
-                    return (tmp && tmp.length)
+                    const tmp = neg.preferredMediaType(t)
+                    return tmp && tmp.length
                 })
 
                 // Pick the first one in case not versioned
@@ -223,9 +221,9 @@ export default class Router extends EventEmitter {
             }
 
             if (versioned) {
-                candidates.forEach(function (c) {
-                    let k = c.r.versions
-                    let v = semver.maxSatisfying(k, req.version())
+                candidates.forEach((c) => {
+                    const k = c.r.versions
+                    const v = semver.maxSatisfying(k, req.version())
 
                     if (v) {
                         if (!r || semver.gt(v, maxV)) {
@@ -249,7 +247,7 @@ export default class Router extends EventEmitter {
             cacheVal = {
                 methods: reverse,
                 name: r.name,
-                params: params,
+                params,
                 spec: r.spec
             }
 
@@ -279,29 +277,26 @@ export default class Router extends EventEmitter {
 
         // Check for 405 instead of 404
         let j
-        let urls = Object.keys(this.reverse)
+        const urls = Object.keys(this.reverse)
 
         for (j = 0; j < urls.length; j++) {
             if (matchURL(new RegExp(urls[j]), req.path())) {
                 res._meta.methods = this.reverse[urls[j]].slice()
                 res.setHeader('Allow', res._meta.methods.join(', '))
 
-                let err = new errors.MethodNotAllowedError('%s is not allowed',
-                    req.method)
-                callback(err)
+                callback(new errors.MethodNotAllowedError('%s is not allowed',
+                    req.method))
                 return
             }
         }
 
         // clean up the url in case of potential xss
         // https://github.com/restify/node-restify/issues/1018
-        let cleanedUrl = url.parse(req.url).pathname
         callback(new errors.ResourceNotFoundError(
-            '%s does not exist', cleanedUrl
+            '%s does not exist', url.parse(req.url).pathname
         ))
     }
 }
-
 
 /**
  * called while installing routes. attempts to compile the passed in string
@@ -317,11 +312,12 @@ function compileURL(options): RegExp {
     }
     assert.string(options.url, 'url')
 
-    let params: string[] = []
+    const params: string[] = []
     let pattern = '^'
     let re
-    let _url = url.parse(options.url).pathname as string
-    _url.split('/').forEach(function (frag) {
+    // tslint:disable-next-line:variable-name
+    const _url = url.parse(options.url).pathname as string
+    _url.split('/').forEach((frag) => {
         if (frag.length <= 0) {
             return false
         }
@@ -330,7 +326,7 @@ function compileURL(options): RegExp {
 
         if (frag.charAt(0) === ':') {
             let label = frag
-            let index = frag.indexOf('(')
+            const index = frag.indexOf('(')
             let subexp
 
             if (index === -1) {
@@ -384,9 +380,9 @@ function compileURL(options): RegExp {
  */
 function matchURL(re: RegExp, reqPath: string) {
     let i = 0
-    let result = re.exec(reqPath)
-    let params = {}
-    let restifyParams = (re as any).restifyParams
+    const result = re.exec(reqPath)
+    const params = {}
+    const restifyParams = (re as any).restifyParams
 
     if (!result) {
         return false
