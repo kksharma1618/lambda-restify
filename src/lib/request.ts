@@ -14,29 +14,29 @@ export default class Request {
     public httpVersion: string
     public method: string
     public params: { [key: string]: string }
+    // tslint:disable-next-line:variable-name
     public _meta: any = {}
     public serverName: string
     public body: string | object
     public rawBody: string
-    
+
     private negotiator
     private contentLengthCached: number | boolean
     private contentTypeCached: string
     private startingTime: number
+    // tslint:disable-next-line:variable-name
     private _id: string
     private cachedUrlObject: url.Url
     private cachedUrl: string
 
-
-
     constructor(private source: EventSource, public log: Logger) {
         this.headers = {}
-        for (let key in source.headers) {
+        Object.keys(source.headers).map((key) => {
             this.headers[key.toLowerCase()] = source.headers[key]
-        }
+        })
         this.negotiator = new Negotiator({
             headers: {
-                accept: this.headers.accept || '*/*',
+                'accept': this.headers.accept || '*/*',
                 'accept-encoding': this.headers['accept-encoding'] ||
                 'identity'
             }
@@ -44,7 +44,7 @@ export default class Request {
         this.url = this.source.path
 
         if (this.source.queryStringParameters) {
-            let urlObject = url.parse(this.url)
+            const urlObject = url.parse(this.url)
             urlObject.query = Object.assign({}, this.source.queryStringParameters)
             this.url = url.format(urlObject)
         }
@@ -73,14 +73,14 @@ export default class Request {
             types = [types]
         }
 
-        types = types.map(function (t) {
+        types = types.map((t) => {
             assert.string(t, 'type')
 
             if (t.indexOf('/') === -1) {
                 t = mime.lookup(t)
             }
             return t
-        });
+        })
 
         return this.negotiator.preferredMediaType(types)
     }
@@ -98,7 +98,7 @@ export default class Request {
             return (this.contentLengthCached === false ? undefined : this.contentLengthCached);
         }
 
-        var len = this.header('content-length')
+        const len = this.header('content-length')
 
         if (!len) {
             this.contentLengthCached = false
@@ -116,13 +116,14 @@ export default class Request {
             return (this.contentTypeCached)
         }
 
-        var index;
-        var type = this.headers['content-type'];
+        let index
+        const type = this.headers['content-type'];
 
         if (!type) {
             this.contentTypeCached = 'application/octet-stream'
         } else {
-            if ((index = type.indexOf(';')) === -1) {
+            index = type.indexOf(';')
+            if (index === -1) {
                 this.contentTypeCached = type;
             } else {
                 this.contentTypeCached = type.substring(0, index)
