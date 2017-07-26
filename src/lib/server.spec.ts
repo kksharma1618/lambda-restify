@@ -27,38 +27,37 @@ function createEventSource(customEventSource?: PartialEventSource) {
     }
     return Object.assign({}, sampleEventSource, customEventSource || {})
 }
-function createlambdaCallback(next?) {
-    return function (error, result) {
+function createlambdaCallback(next?): LamdaCallback {
+    return (error, result) => {
         responseError = error
         response = result
         if (next) {
             next(error, result)
         }
-    } as LamdaCallback
+    }
 }
 function triggerRequest(server: Server, customEventSource?: PartialEventSource, onResponse?) {
     server.handlelambdaEvent(createEventSource(customEventSource), createlambdaCallback(onResponse))
 }
 
-
-describe('Server', function () {
+describe('Server', () => {
 
     let server: Server
-    beforeEach(function () {
+    beforeEach(() => {
         server = createModel()
     })
 
     function testSuccessModelResponse() {
+        // tslint:disable-next-line:no-unused-expression
         expect(responseError).to.be.null
         expect(response).to.be.an('object')
     }
     function testHeaderInModelResponse(name: string, value?: any) {
         testSuccessModelResponse()
-        let t = expect(response.headers).to.be.an('object')
+        const t = expect(response.headers).to.be.an('object')
         if (value) {
             t.with.property(name, value)
-        }
-        else {
+        } else {
             t.with.property(name)
         }
     }
@@ -77,23 +76,23 @@ describe('Server', function () {
         }
     }
     async function makeRequest(url, method: httpMethod = 'GET', headers: any = {}, body = '') {
-        return await utils.promiseFromCallback<any>(function (next) {
+        return await utils.promiseFromCallback<any>((next) => {
             triggerRequest(server, {
-                body: body,
-                headers: headers,
+                body,
+                headers,
                 httpMethod: method,
                 path: url
             }, next)
         })
     }
 
-    describe('pre', function () {
-        it('should register pre handler', function (done) {
-            server.pre(function (req, res, next) {
+    describe('pre', () => {
+        it('should register pre handler', (done) => {
+            server.pre((req, res, next) => {
                 (req as any).someValue = 23
                 return next()
             })
-            server.get('/r1', function (req, res) {
+            server.get('/r1', (req, res) => {
                 should.equal((req as any).someValue, 23)
                 done()
             })
@@ -102,15 +101,15 @@ describe('Server', function () {
                 httpMethod: "GET"
             })
         })
-        it('should register multiple pre handler', function (done) {
-            server.pre(function (req, res, next) {
+        it('should register multiple pre handler', (done) => {
+            server.pre((req, res, next) => {
                 (req as any).someValue = 23
                 return next()
-            }, function (req, res, next) {
+            }, (req, res, next) => {
                 (req as any).someOtherValue = 24
                 return next()
             })
-            server.get('/r1', function (req, res) {
+            server.get('/r1', (req, res) => {
                 should.equal((req as any).someValue, 23)
                 should.equal((req as any).someOtherValue, 24)
                 done()
@@ -120,45 +119,45 @@ describe('Server', function () {
                 httpMethod: "GET"
             })
         })
-        it('prerouting - pre handler throws error', function (done) {
-            server.pre(function (req, res, next) {
+        it('prerouting - pre handler throws error', (done) => {
+            server.pre((req, res, next) => {
                 next(new errors.BadRequestError('abc'))
             })
-            server.get('/r1', function (req, res) {
+            server.get('/r1', (req, res) => {
                 chai.assert.notOk("Should not have reached")
             })
             triggerRequest(server, {
                 path: "/r1",
                 httpMethod: "GET"
-            }, function () {
+            }, () => {
                 testStatusCodeInModelResponse(400)
                 testBodyInModelResponse('BadRequestError: abc')
                 done()
             })
 
         })
-        it('prerouting - handlers should be fired even if no route was selected', function (done) {
-            server.pre(function (req, res, next) {
+        it('prerouting - handlers should be fired even if no route was selected', (done) => {
+            server.pre((req, res, next) => {
                 next()
             })
             triggerRequest(server, {
                 path: 'nosuchpath'
-            }, function () {
+            }, () => {
                 testStatusCodeInModelResponse(404)
                 done()
             })
         })
-        it('prerouting - next(false) should skip the remaining handlers', function (done) {
-            server.pre(function (req, res, next) {
+        it('prerouting - next(false) should skip the remaining handlers', (done) => {
+            server.pre((req, res, next) => {
                 res.send('some')
                 next(false)
             })
-            server.get('/some/path', function (req, res, next) {
+            server.get('/some/path', (req, res, next) => {
                 chai.assert.notOk('Should not be reached')
             })
             triggerRequest(server, {
                 path: '/some/path'
-            }, function () {
+            }, () => {
                 testStatusCodeInModelResponse(200)
                 testBodyInModelResponse('some')
                 done()
@@ -166,13 +165,13 @@ describe('Server', function () {
         })
     })
 
-    describe('use', function () {
-        it('should register handler', function (done) {
-            server.use(function (req, res, next) {
+    describe('use', () => {
+        it('should register handler', (done) => {
+            server.use((req, res, next) => {
                 (req as any).someValue = 23
                 return next()
             })
-            server.get('/r1', function (req, res) {
+            server.get('/r1', (req, res) => {
                 should.equal((req as any).someValue, 23)
                 done()
             })
@@ -181,15 +180,15 @@ describe('Server', function () {
                 httpMethod: "GET"
             })
         })
-        it('should register multiple handler', function (done) {
-            server.use(function (req, res, next) {
+        it('should register multiple handler', (done) => {
+            server.use((req, res, next) => {
                 (req as any).someValue = 23
                 return next()
-            }, function (req, res, next) {
+            }, (req, res, next) => {
                 (req as any).someOtherValue = 24
                 return next()
             })
-            server.get('/r1', function (req, res) {
+            server.get('/r1', (req, res) => {
                 should.equal((req as any).someValue, 23)
                 should.equal((req as any).someOtherValue, 24)
                 done()
@@ -199,16 +198,16 @@ describe('Server', function () {
                 httpMethod: "GET"
             })
         })
-        it('handler should run after pre handlers', function (done) {
-            server.use(function (req, res, next) {
+        it('handler should run after pre handlers', (done) => {
+            server.use((req, res, next) => {
                 should.equal((req as any).someValue, 23)
                 next()
             })
-            server.pre(function (req, res, next) {
+            server.pre((req, res, next) => {
                 (req as any).someValue = 23
                 next()
             })
-            server.get('/r1', function (req, res) {
+            server.get('/r1', (req, res) => {
                 done()
             })
             triggerRequest(server, {
@@ -216,8 +215,8 @@ describe('Server', function () {
                 httpMethod: "GET"
             })
         })
-        it('handler should only run when route has matched', function (done) {
-            server.use(function (req, res, next) {
+        it('handler should only run when route has matched', (done) => {
+            server.use((req, res, next) => {
                 chai.assert.notOk('should not have reached')
                 next()
             })
@@ -229,16 +228,16 @@ describe('Server', function () {
         })
     })
 
-    describe('params support', function () {
+    describe('params support', () => {
         it('should match and provide params', async () => {
-            server.get('/users/:id/:task', function (req, res, next) {
+            server.get('/users/:id/:task', (req, res, next) => {
                 res.send(req.params.id + ':' + req.params.task)
             })
             await makeRequest('/users/23/delete')
             testBodyInModelResponse('23:delete')
         })
     })
-    describe('version support', function () {
+    describe('version support', () => {
 
         function checkInvalidVersionError() {
             testStatusCodeInModelResponse(400)
@@ -247,10 +246,10 @@ describe('Server', function () {
         }
 
         it('should allow different version to coexist', async () => {
-            server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
+            server.get({ path: '/vr', version: '1.1.3' }, (req, res) => {
                 res.send('1.1.3')
             })
-            server.get({ path: '/vr', version: '2.0.1' }, function (req, res) {
+            server.get({ path: '/vr', version: '2.0.1' }, (req, res) => {
                 res.send('2.0.1')
             })
 
@@ -266,7 +265,7 @@ describe('Server', function () {
         })
 
         it('should throw version error if no valid one exist', async () => {
-            server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
+            server.get({ path: '/vr', version: '1.1.3' }, (req, res) => {
                 res.send('1.1.3')
             })
             await makeRequest('/vr', 'GET', {
@@ -275,10 +274,10 @@ describe('Server', function () {
             checkInvalidVersionError()
         })
         it('should use latest once if no version specified', async () => {
-            server.get({ path: '/vr', version: '1.1.3' }, function (req, res) {
+            server.get({ path: '/vr', version: '1.1.3' }, (req, res) => {
                 res.send('1.1.3')
             })
-            server.get({ path: '/vr', version: '2.0.1' }, function (req, res) {
+            server.get({ path: '/vr', version: '2.0.1' }, (req, res) => {
                 res.send('2.0.1')
             })
 
@@ -286,13 +285,13 @@ describe('Server', function () {
             testBodyInModelResponse('2.0.1')
         })
         it('should support versionedUse', async () => {
-            server.versionedUse(['1.0.1', '2.0.3'], function (req, res) {
+            server.versionedUse(['1.0.1', '2.0.3'], (req, res) => {
                 res.send('1,2')
             })
-            server.versionedUse('3.1.2', function (req, res) {
+            server.versionedUse('3.1.2', (req, res) => {
                 res.send('3')
             })
-            server.get({ path: '/v', version: ['1.0.1', '2.0.3', '3.1.2', '4.0.1'] }, function (req, res) {
+            server.get({ path: '/v', version: ['1.0.1', '2.0.3', '3.1.2', '4.0.1'] }, (req, res) => {
                 res.send('nv')
             })
             await makeRequest('/v', 'GET', {
@@ -313,11 +312,10 @@ describe('Server', function () {
         })
 
         it('should respect server.versions option', async () => {
-            
-            server.get('/p', function(req, res) {
+            server.get('/p', (req, res) => {
                 res.send('a')
             })
-            server.get({path: '/p', version: '2.1.1'}, function(req, res) {
+            server.get({path: '/p', version: '2.1.1'}, (req, res) => {
                 res.send('b')
             })
             await makeRequest('/p', 'GET', {
@@ -329,10 +327,10 @@ describe('Server', function () {
                 versions: ['1.0.1']
             })
 
-            server.get('/p', function(req, res) {
+            server.get('/p', (req, res) => {
                 res.send('a')
             })
-            server.get({path: '/p', version: '2.1.1'}, function(req, res) {
+            server.get({path: '/p', version: '2.1.1'}, (req, res) => {
                 res.send('b')
             })
             await makeRequest('/p', 'GET', {
@@ -342,12 +340,12 @@ describe('Server', function () {
 
         })
     })
-    describe('routing', function () {
+    describe('routing', () => {
         it('should differentiate between different verbs', async () => {
-            server.get('/p', function (req, res) {
+            server.get('/p', (req, res) => {
                 res.send('g')
             })
-            server.post('/p', function (req, res) {
+            server.post('/p', (req, res) => {
                 res.send('p')
             })
             await makeRequest('/p', 'GET')
@@ -381,20 +379,20 @@ describe('Server', function () {
             testStatusCodeInModelResponse(404)
         })
     })
-    describe('custom formatters', function () {
+    describe('custom formatters', () => {
         it('should support formatters option', async () => {
             server = createModel({
                 formatters: {
-                    'text/html': function (req: Request, res: Response, body: any) {
+                    'text/html': (req: Request, res: Response, body: any) => {
                         let data = body ? body.toString() : ''
-                        data = '['+data+']'
+                        data = '[' + data + ']'
                         res.setHeader('Content-Length', Buffer.byteLength(data))
                         return data
                     }
                 }
             })
 
-            server.get('/p', function(req, res) {
+            server.get('/p', (req, res) => {
                 res.send('a')
             })
 
@@ -403,10 +401,9 @@ describe('Server', function () {
         })
     })
 
-    describe('body parser', function() {
+    describe('body parser', () => {
         it('should parse urlencoded body', async () => {
-            
-            server.post('/p', function(req, res) {
+            server.post('/p', (req, res) => {
                 res.json(req.body)
             })
 
@@ -419,11 +416,11 @@ describe('Server', function () {
             const b = JSON.parse(response.body)
             b.should.have.property('a', '12')
             b.should.have.property('b', 'c')
-            b.should.have.property('d').which.is.an('array').which.is.deep.equal(['1','2'])
+            b.should.have.property('d').which.is.an('array').which.is.deep.equal(['1', '2'])
         })
 
         it('should parse json body', async () => {
-            server.post('/p', function(req, res) {
+            server.post('/p', (req, res) => {
                 res.json(req.body)
             })
 
@@ -442,7 +439,7 @@ describe('Server', function () {
             server = createModel({
                 dontParseBody: true
             })
-            server.post('/p', function(req, res) {
+            server.post('/p', (req, res) => {
                 res.send(req.body)
             })
 

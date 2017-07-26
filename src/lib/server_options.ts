@@ -4,7 +4,7 @@ import {LevelType} from './logger'
 
 export type FormatterFunction = (req: Request, res: Response, body: any) => any
 
-export type Formatters = {
+export interface Formatters {
     [key: string]: FormatterFunction
 }
 
