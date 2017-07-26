@@ -190,7 +190,6 @@ export default class Server extends EventEmitter {
 
         function next(arg?) {
             let done = false
-
             if (arg) {
                 if (arg instanceof Error) {
 
@@ -374,7 +373,6 @@ export default class Server extends EventEmitter {
         this.chain.forEach(addHandler)
         argumentsToChain(arguments, 2).forEach(addHandler)
         this.routes[route] = chain
-
         this.log.trace('added method route', opts)
 
         return route
@@ -400,7 +398,7 @@ function argumentsToChain(args, start = 0) {
                 chain.push(handler)
             }
         }
-        return (chain)
+        return chain
     }
 
     return process(args)

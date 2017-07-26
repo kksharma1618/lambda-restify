@@ -1,5 +1,6 @@
 export default function once(fn) {
-  const f: any = () => {
+  // tslint:disable-next-line:only-arrow-functions
+  const f: any = function() {
     if (f.called) {
         return f.value
     }
