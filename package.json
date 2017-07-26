@@ -11,7 +11,8 @@
     "prepublish": "npm run build",
     "build": "tsc",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
-    "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts"
+    "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
+    "lint": "tslint src/**/*.ts"
   },
   "repository": {
     "type": "git",

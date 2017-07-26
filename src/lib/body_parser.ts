@@ -1,27 +1,26 @@
 import * as qs from 'querystring'
 import {InvalidContentError} from 'restify-errors'
 
-export default function (req, res, next) {
+export default function(req, res, next) {
     req.rawBody = req.body
-    if(!req.body) {
+    if (!req.body) {
         return next()
     }
     const contentType = req.header('content-type')
-    if(!contentType) {
+    if (!contentType) {
         return next()
     }
-    switch(contentType) {
+    switch (contentType) {
         case 'application/x-www-form-urlencoded':
             req.body = qs.parse(req.rawBody)
-        break
+            break
         case 'application/json':
             try {
                 req.body = JSON.parse(req.rawBody)
+            } catch (e) {
+                return next(new InvalidContentError('Invalid JSON: ' + e.message))
             }
-            catch(e) {
-                return next(new InvalidContentError('Invalid JSON: '+e.message))
-            }
-        break
+            break
     }
     next()
 }
