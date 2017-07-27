@@ -20,7 +20,7 @@ export default class Logger {
         return this.log("FATAL", args)
     }
     public error(...args: any[]) {
-        return this.log("FATAL", args)
+        return this.log("ERROR", args)
     }
     public warn(...args: any[]) {
         return this.log("WARN", args)
