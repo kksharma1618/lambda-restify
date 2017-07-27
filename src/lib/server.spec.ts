@@ -37,7 +37,7 @@ function createlambdaCallback(next?): LamdaCallback {
     }
 }
 function triggerRequest(server: Server, customEventSource?: PartialEventSource, onResponse?) {
-    server.handleLambdaEvent(createEventSource(customEventSource), createlambdaCallback(onResponse))
+    server.handleLambdaEvent(createEventSource(customEventSource), null, createlambdaCallback(onResponse))
 }
 
 describe('Server', () => {

@@ -109,7 +109,7 @@ export default class Server extends EventEmitter {
 
         return this
     }
-    public handleLambdaEvent(eventSource: EventSource, lambdaCallback: LamdaCallback) {
+    public handleLambdaEvent(eventSource: EventSource, context, lambdaCallback: LamdaCallback) {
         this.log.trace('handleLambdaEvent', eventSource)
         const req = new Request(eventSource, this.log)
         const res = new Response(lambdaCallback, req, this.log, this.formatters, this.acceptable)
