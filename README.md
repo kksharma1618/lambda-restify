@@ -88,7 +88,7 @@ server.post('/user/:id', function(req, res) {
 ### Attach lambda handler
 ``` javascript
 exports.yourlambdaHandler = function(event, context, callback) {
-    server.handlelambdaEvent(event, callback)
+    server.handleLambdaEvent(event, callback)
 }
 ```
 
@@ -170,5 +170,5 @@ See [restify documentation](http://restify.com/docs/home/). Following items work
     - param(name, fn)
     - versionedUse(versions: string | string[], fn)
 
-**Server.handlelambdaEvent(lambdaEvent, lambdaCallback)**<br />
+**Server.handleLambdaEvent(lambdaEvent, lambdaCallback)**<br />
 Plug this into lambda handler to route all incoming lambda events.
