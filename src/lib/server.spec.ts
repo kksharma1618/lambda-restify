@@ -226,6 +226,22 @@ describe('Server', () => {
             })
             setTimeout(done, 20)
         })
+        it('should handle error thrown in use', (done) => {
+            server.use((req, res, next) => {
+                next(new errors.BadRequestError('abc'))
+            })
+            server.get('/r1', (req, res) => {
+                chai.assert.notOk("Should not have reached")
+            })
+            triggerRequest(server, {
+                path: "/r1",
+                httpMethod: "GET"
+            }, () => {
+                testStatusCodeInModelResponse(400)
+                testBodyInModelResponse('BadRequestError: abc')
+                done()
+            })
+        })
     })
 
     describe('params support', () => {

@@ -216,7 +216,7 @@ export default class Server extends EventEmitter {
                     }
 
                     const errName = arg.name.replace(/Error$/, '');
-                    log.trace({
+                    log.error({
                         err: arg,
                         errName
                     }, 'next(err=%s)', (arg.name || 'Error'));

@@ -93,6 +93,14 @@ exports.yourlambdaHandler = function(event, context, callback) {
 ```
 
 ## Documentation
+
+**Note**<br />
+Most likely, you will need to set: 
+``` javascript 
+context.callbackWaitsForEmptyEventLoop = false 
+```
+before calling server.handleLamdaEvent in your lamda handler. See [http://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html) for details. 
+
 See [restify documentation](http://restify.com/docs/home/). Following items work just as they did in restify:
 - Request:
     - headers
