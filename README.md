@@ -38,7 +38,14 @@ npm install --save lambda-restify
 See list of supported options [here](https://github.com/kksharma1618/lambda-restify/blob/master/src/lib/server_options.ts).
 
 ``` javascript
-const Server = require('lambda-restify');
+const Server = require('lambda-restify').default;
+const server = new Server(options);
+```
+
+Or, if you are using imports
+
+``` javascript
+import Server from 'lambda-restify';
 const server = new Server(options);
 ```
 

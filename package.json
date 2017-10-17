@@ -1,6 +1,6 @@
 {
   "name": "lambda-restify",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "A restify like interface for aws lambda with api gateway event source",
   "main": "build/index",
   "types": "build/index",
