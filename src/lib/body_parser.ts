@@ -10,17 +10,14 @@ export default function(req, res, next) {
     if (!contentType) {
         return next()
     }
-    switch (contentType) {
-        case 'application/x-www-form-urlencoded':
-            req.body = qs.parse(req.rawBody)
-            break
-        case 'application/json':
-            try {
-                req.body = JSON.parse(req.rawBody)
-            } catch (e) {
-                return next(new InvalidContentError('Invalid JSON: ' + e.message))
-            }
-            break
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+        req.body = qs.parse(req.rawBody)
+    } else if (contentType.includes('application/json')) {
+        try {
+            req.body = JSON.parse(req.rawBody)
+        } catch (e) {
+            return next(new InvalidContentError('Invalid JSON: ' + e.message))
+        }
     }
     next()
 }
