@@ -10,7 +10,7 @@ export default function(req, res, next) {
     if (!contentType) {
         return next()
     }
-    var jsonPatternMatcher = new RegExp('^application/[a-zA-Z.]+\\+json');
+    const jsonPatternMatcher = new RegExp('^application/[a-zA-Z.]+\\+json');
     // map any +json to application/json
     if (jsonPatternMatcher.test(contentType)) {
         contentType = 'application/json';

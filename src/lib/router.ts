@@ -156,9 +156,9 @@ export default class Router extends EventEmitter {
             return
         }
 
-        for (let i = 0; i < routes.length; i++) {
+        for (const route of routes) {
             try {
-                params = matchURL(routes[i].path, req.path())
+                params = matchURL(route.path, req.path())
                 // console.log('p', params, req.path())
             } catch (e) {
                 this.log.trace({ err: e }, 'error parsing URL')
@@ -170,12 +170,12 @@ export default class Router extends EventEmitter {
                 continue
             }
 
-            reverse = this.reverse[routes[i].path.source]
+            reverse = this.reverse[route.path.source]
 
-            if (routes[i].types.length && req.isUpload()) {
+            if (route.types.length && req.isUpload()) {
                 candidates.push({
                     p: params,
-                    r: routes[i]
+                    r: route
                 })
                 typed = true
                 continue
@@ -185,15 +185,15 @@ export default class Router extends EventEmitter {
             // not the first one.  However, if neither the client nor
             // server specified any version, we're done, because neither
             // cared
-            if (routes[i].versions.length === 0 && req.version() === '*') {
-                r = routes[i]
+            if (route.versions.length === 0 && req.version() === '*') {
+                r = route
                 break
             }
 
-            if (routes[i].versions.length > 0) {
+            if (route.versions.length > 0) {
                 candidates.push({
                     p: params,
-                    r: routes[i]
+                    r: route
                 })
                 versioned = true
             }
