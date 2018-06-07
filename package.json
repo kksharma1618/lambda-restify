@@ -12,7 +12,7 @@
     "build": "tsc",
     "test": "./node_modules/mocha/bin/mocha -r ts-node/register src/**/*.spec.ts",
     "testwatch": "./node_modules/mocha/bin/mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
-    "lint": "tslint src/**/*.ts"
+    "lint": "./node_modules/tslint/bin/tslint src/**/*.ts"
   },
   "repository": {
     "type": "git",
@@ -49,6 +49,7 @@
     "nodemon": "^1.11.0",
     "npm-run-series": "^1.0.0",
     "ts-node": "^3.0.4",
+    "tslint": "^5.10.0",
     "typescript": "^2.3.2"
   },
   "dependencies": {
