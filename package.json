@@ -10,8 +10,8 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "tsc",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts",
-    "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
+    "test": "./node_modules/mocha/bin/mocha -r ts-node/register src/**/*.spec.ts",
+    "testwatch": "./node_modules/mocha/bin/mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
     "lint": "tslint src/**/*.ts"
   },
   "repository": {
@@ -26,6 +26,9 @@
     "serverless"
   ],
   "author": "Krishna Kant Sharma <kks@krishnakantsharma.com>",
+  "contributors": [
+    "Ifiok Idiang <ifiok@ifiok.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/kksharma1618/lambda-restify/issues"
