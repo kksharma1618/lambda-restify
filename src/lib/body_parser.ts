@@ -6,18 +6,27 @@ export default function(req, res, next) {
     if (!req.body) {
         return next()
     }
-    const contentType = req.header('content-type')
+    let contentType = req.header('content-type')
     if (!contentType) {
         return next()
     }
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-        req.body = qs.parse(req.rawBody)
-    } else if (contentType.includes('application/json')) {
-        try {
-            req.body = JSON.parse(req.rawBody)
-        } catch (e) {
-            return next(new InvalidContentError('Invalid JSON: ' + e.message))
-        }
+    var jsonPatternMatcher = new RegExp('^application/[a-zA-Z.]+\\+json');
+    // map any +json to application/json
+    if (jsonPatternMatcher.test(contentType)) {
+        contentType = 'application/json';
+    }
+
+    switch (contentType) {
+        case 'application/x-www-form-urlencoded':
+            req.body = qs.parse(req.rawBody)
+            break
+        case 'application/json':
+            try {
+                req.body = JSON.parse(req.rawBody)
+            } catch (e) {
+                return next(new InvalidContentError('Invalid JSON: ' + e.message))
+            }
+            break
     }
     next()
 }
