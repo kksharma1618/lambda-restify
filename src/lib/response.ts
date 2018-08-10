@@ -481,7 +481,7 @@ export default class Response {
         if (!this.lambdaCallbackCalled) {
             this.lambdaCallbackCalled = true
             this.lambdaCallback(null, {
-                statusCode: this.statusCode + '',
+                statusCode: this.statusCode,
                 body: this._body || this.statusMessage || '',
                 headers: this.getHeaders()
             })
