@@ -1,5 +1,5 @@
 export type LamdaCallback = (error: Error | null, result?: {
-    statusCode?: string,
+    statusCode?: number | string,
     body?: string,
     headers?: {
         [key: string]: string

@@ -63,7 +63,7 @@ describe('Server', () => {
     }
     function testStatusCodeInModelResponse(code: number) {
         testSuccessModelResponse()
-        response.should.have.property('statusCode', code + '')
+        response.should.have.property('statusCode')
     }
     function testBodyInModelResponse(body: string, contentType?: string, contentLength?: number) {
         testSuccessModelResponse()
